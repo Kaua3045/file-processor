@@ -38,6 +38,7 @@ dependencies {
 //    implementation 'org.springframework.boot:spring-boot-starter-undertow'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     implementation "io.opentelemetry:opentelemetry-api:$opentelemetryVersion"
@@ -54,7 +55,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-blackbird'
 
     implementation 'org.flywaydb:flyway-core'
-//    implementation 'org.postgresql:postgresql' change to match your database driver
+    implementation 'org.postgresql:postgresql'
 
     implementation 'org.owasp.encoder:encoder:1.2.3'
 
@@ -81,6 +82,7 @@ jacocoTestReport {
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
                             'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/jdbc/*',
                             'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
@@ -103,6 +105,7 @@ testCodeCoverageReport {
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
                             'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/jdbc/*',
                             'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
@@ -116,6 +119,7 @@ jacocoTestCoverageVerification {
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
                             'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/jdbc/*',
                             'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
