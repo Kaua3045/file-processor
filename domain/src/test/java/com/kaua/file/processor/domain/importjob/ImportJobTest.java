@@ -12,13 +12,16 @@ class ImportJobTest extends UnitTest {
     @Test
     void givenAValidParams_whenCallsNewImportJob_thenInstantiateACorrectObject() {
         final var expectedFileRef = "file-ref";
+        final var expectedFileHash = "file-hash";
         final var expectedStatus = ImportJobStatus.CREATED;
 
         final var actualImportJob = ImportJob.newImportJob(
-                expectedFileRef
+                expectedFileRef,
+                expectedFileHash
         );
 
         assertEquals(expectedFileRef, actualImportJob.getFileRef());
+        assertEquals(expectedFileHash, actualImportJob.getFileHash());
         assertEquals(expectedStatus, actualImportJob.getStatus());
         assertNotNull(actualImportJob.getId());
         assertNotNull(actualImportJob.getCreatedAt());
@@ -29,10 +32,11 @@ class ImportJobTest extends UnitTest {
     @Test
     void givenAnInvalidNullFileRef_whenCallsNewImportJob_thenShouldReceiveError() {
         final String expectedFileRef = null;
+        final var expectedFileHash = "file-hash";
 
         final var actualException = assertThrows(
                 ValidationException.class,
-                () -> ImportJob.newImportJob(expectedFileRef)
+                () -> ImportJob.newImportJob(expectedFileRef, expectedFileHash)
         );
 
         assertEquals("should not be empty", actualException.getErrors().getFirst().message());
@@ -42,10 +46,11 @@ class ImportJobTest extends UnitTest {
     @Test
     void givenAnInvalidEmptyFileRef_whenCallsNewImportJob_thenShouldReceiveError() {
         final var expectedFileRef = " ";
+        final var expectedFileHash = "file-hash";
 
         final var actualException = assertThrows(
                 ValidationException.class,
-                () -> ImportJob.newImportJob(expectedFileRef)
+                () -> ImportJob.newImportJob(expectedFileRef, expectedFileHash)
         );
 
         assertEquals("should not be empty", actualException.getErrors().getFirst().message());
@@ -73,7 +78,7 @@ class ImportJobTest extends UnitTest {
 
     @Test
     void testCallImportJobToString() {
-        final var importJob = ImportJob.newImportJob("file-ref");
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
 
         final var toStringResult = importJob.toString();
 
@@ -84,7 +89,7 @@ class ImportJobTest extends UnitTest {
 
     @Test
     void givenAValidImportJobCreatedEvent_whenCallsRegisterEvent_thenShouldRegisterIt() {
-        final var importJob = ImportJob.newImportJob("file-ref");
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
         final var event = new ImportJobCreatedEvent(
                 importJob.getId().value().toString(),
                 importJob.getVersion()
