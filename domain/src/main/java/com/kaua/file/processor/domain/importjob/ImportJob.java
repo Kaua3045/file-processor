@@ -11,6 +11,7 @@ import java.util.Optional;
 public class ImportJob extends AggregateRoot<ImportJobId> {
 
     private String fileRef;
+    private String fileHash;
     private ImportJobStatus status;
     private Instant createdAt;
     private Instant updatedAt;
@@ -20,6 +21,7 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
             final ImportJobId aImportJobId,
             final long aVersion,
             final String aFileRef,
+            final String aFileHash,
             final ImportJobStatus aStatus,
             final Instant aCreatedAt,
             final Instant aUpdatedAt,
@@ -27,19 +29,21 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
     ) {
         super(aImportJobId, aVersion);
         setFileRef(aFileRef);
+        setFileHash(aFileHash);
         setStatus(aStatus);
         setCreatedAt(aCreatedAt);
         setUpdatedAt(aUpdatedAt);
         setDeletedAt(aDeletedAt);
     }
 
-    public static ImportJob newImportJob(final String aFileRef) {
+    public static ImportJob newImportJob(final String aFileRef, final String aFileHash) {
         final var aNow = InstantUtils.now();
 
         return new ImportJob(
                 new ImportJobId(IdentifierUtils.generateNewMonotonicULID()),
                 0,
                 aFileRef,
+                aFileHash,
                 ImportJobStatus.CREATED,
                 aNow,
                 aNow,
@@ -49,6 +53,10 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
 
     public String getFileRef() {
         return fileRef;
+    }
+
+    public String getFileHash() {
+        return fileHash;
     }
 
     public ImportJobStatus getStatus() {
@@ -69,6 +77,10 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
 
     private void setFileRef(final String fileRef) {
         this.fileRef = this.assertArgumentNotEmpty(fileRef, "fileRef", "should not be empty");
+    }
+
+    private void setFileHash(final String fileHash) {
+        this.fileHash = this.assertArgumentNotEmpty(fileHash, "fileHash", "should not be empty");
     }
 
     private void setStatus(final ImportJobStatus status) {
@@ -95,6 +107,7 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
     public String toString() {
         return "ImportJob(" +
                 "fileRef='" + fileRef + '\'' +
+                ", fileHash='" + fileHash + '\'' +
                 ", status=" + status +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
