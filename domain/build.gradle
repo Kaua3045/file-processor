@@ -3,7 +3,7 @@ plugins {
     id 'java-conventions'
 }
 
-group = 'com.kaua.template.domain'
+group = 'com.kaua.file.processor.domain'
 
 dependencies {
     implementation 'net.datafaker:datafaker:2.0.1'

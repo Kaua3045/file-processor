@@ -7,7 +7,7 @@ plugins {
     id 'org.flywaydb.flyway' version '10.13.0'
 }
 
-group = 'com.kaua.template.infrastructure'
+group = 'com.kaua.file.processor.infrastructure'
 
 bootJar {
     archiveFileName = 'application.jar'
@@ -17,7 +17,7 @@ bootJar {
 springBoot {
     buildInfo {
         properties {
-            name = 'java-template'
+            name = 'file-processor'
         }
     }
 }
@@ -80,8 +80,8 @@ jacocoTestReport {
         classDirectories.setFrom(
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
-                            'com/kaua/template/infrastructure/configurations/*',
-                            'com/kaua/template/infrastructure/Main.class'
+                            'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
         )
@@ -102,8 +102,8 @@ testCodeCoverageReport {
         classDirectories.setFrom(
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
-                            'com/kaua/template/infrastructure/configurations/*',
-                            'com/kaua/template/infrastructure/Main.class'
+                            'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
         )
@@ -115,8 +115,8 @@ jacocoTestCoverageVerification {
         classDirectories.setFrom(
                 files(classDirectories.files.collect {
                     fileTree(dir: it, exclude: [
-                            'com/kaua/template/infrastructure/configurations/*',
-                            'com/kaua/template/infrastructure/Main.class'
+                            'com/kaua/file/processor/infrastructure/configurations/*',
+                            'com/kaua/file/processor/infrastructure/Main.class'
                     ])
                 })
         )

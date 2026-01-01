@@ -9,7 +9,7 @@ idempotency-key:
 logging:
   level:
     ROOT: WARN
-    com.kaua.template: DEBUG
+    com.kaua.file.processor: DEBUG
 
 server:
   port: 8080

@@ -1,9 +1,9 @@
 application:
   otel:
     memory-exporter: true
-  name: events-platform
+  name: file-processor
   environment: ${DEPLOYMENT_ENVIRONMENT_NAME:dev}
-  instance: events-platform-01
+  instance: file-processor-01
 
 redis:
   host: localhost
