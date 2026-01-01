@@ -1,0 +1,17 @@
+package com.kaua.file.processor.infrastructure.configurations;
+
+import com.kaua.file.processor.infrastructure.jdbc.DatabaseClient;
+import com.kaua.file.processor.infrastructure.jdbc.JdbcClientAdapter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
+import org.springframework.jdbc.core.simple.JdbcClient;
+
+@Configuration(proxyBeanMethods = false)
+public class JdbcConfig {
+
+    @Bean
+    public DatabaseClient databaseClient(final JdbcClient jdbcClient, final NamedParameterJdbcOperations namedParameterJdbcOperations) {
+        return new JdbcClientAdapter(jdbcClient, namedParameterJdbcOperations);
+    }
+}
