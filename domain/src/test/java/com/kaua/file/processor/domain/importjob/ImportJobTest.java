@@ -3,8 +3,11 @@ package com.kaua.file.processor.domain.importjob;
 import com.kaua.file.processor.domain.UnitTest;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.ValidationException;
+import com.kaua.file.processor.domain.utils.ULID;
+import com.kaua.file.processor.domain.validation.handler.NotificationHandler;
 import org.junit.jupiter.api.Test;
 
+import static com.kaua.file.processor.domain.utils.InstantUtils.now;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ImportJobTest extends UnitTest {
@@ -27,6 +30,7 @@ class ImportJobTest extends UnitTest {
         assertNotNull(actualImportJob.getCreatedAt());
         assertNotNull(actualImportJob.getUpdatedAt());
         assertTrue(actualImportJob.getDeletedAt().isEmpty());
+        assertDoesNotThrow(() -> actualImportJob.validate(NotificationHandler.create()));
     }
 
     @Test
@@ -99,5 +103,38 @@ class ImportJobTest extends UnitTest {
 
         assertEquals(1, importJob.getDomainEvents().size());
         assertEquals(event, importJob.getDomainEvents().getFirst());
+    }
+
+    @Test
+    void givenAValidParams_whenCallsWith_thenInstantiateACorrectObject() {
+        final var expectedId = new ImportJobId(ULID.random());
+        final var expectedVersion = 2L;
+        final var expectedFileRef = "file-ref";
+        final var expectedFileHash = "file-hash";
+        final var expectedStatus = ImportJobStatus.PROCESSING;
+        final var expectedCreatedAt = now();
+        final var expectedUpdatedAt = now();
+        final var expectedDeletedAt = now();
+
+        final var actualImportJob = ImportJob.with(
+                expectedId,
+                expectedVersion,
+                expectedFileRef,
+                expectedFileHash,
+                expectedStatus,
+                expectedCreatedAt,
+                expectedUpdatedAt,
+                expectedDeletedAt
+        );
+
+        assertEquals(expectedId, actualImportJob.getId());
+        assertEquals(expectedVersion, actualImportJob.getVersion());
+        assertEquals(expectedFileRef, actualImportJob.getFileRef());
+        assertEquals(expectedFileHash, actualImportJob.getFileHash());
+        assertEquals(expectedStatus, actualImportJob.getStatus());
+        assertEquals(expectedCreatedAt, actualImportJob.getCreatedAt());
+        assertEquals(expectedUpdatedAt, actualImportJob.getUpdatedAt());
+        assertTrue(actualImportJob.getDeletedAt().isPresent());
+        assertEquals(expectedDeletedAt, actualImportJob.getDeletedAt().get());
     }
 }
