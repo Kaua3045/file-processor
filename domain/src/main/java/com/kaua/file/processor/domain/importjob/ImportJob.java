@@ -51,6 +51,28 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
         );
     }
 
+    public static ImportJob with(
+            final ImportJobId aId,
+            final long aVersion,
+            final String aFileRef,
+            final String aFileHash,
+            final ImportJobStatus aStatus,
+            final Instant aCreatedAt,
+            final Instant aUpdatedAt,
+            final Instant aDeletedAt
+    ) {
+        return new ImportJob(
+                aId,
+                aVersion,
+                aFileRef,
+                aFileHash,
+                aStatus,
+                aCreatedAt,
+                aUpdatedAt,
+                aDeletedAt
+        );
+    }
+
     public String getFileRef() {
         return fileRef;
     }
@@ -76,11 +98,15 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
     }
 
     private void setFileRef(final String fileRef) {
-        this.fileRef = this.assertArgumentNotEmpty(fileRef, "fileRef", "should not be empty");
+        this.assertArgumentNotEmpty(fileRef, "fileRef", "should not be empty");
+        this.assertArgumentMaxLength(fileRef, 255, "fileRef", "must be less than 255 characters");
+        this.fileRef = fileRef;
     }
 
     private void setFileHash(final String fileHash) {
-        this.fileHash = this.assertArgumentNotEmpty(fileHash, "fileHash", "should not be empty");
+        this.assertArgumentNotEmpty(fileHash, "fileHash", "should not be empty");
+        this.assertArgumentMaxLength(fileHash, 64, "fileHash", "must be less than 64 characters");
+        this.fileHash = fileHash;
     }
 
     private void setStatus(final ImportJobStatus status) {
