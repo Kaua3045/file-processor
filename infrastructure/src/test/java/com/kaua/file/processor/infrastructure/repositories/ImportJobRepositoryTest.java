@@ -1,6 +1,7 @@
 package com.kaua.file.processor.infrastructure.repositories;
 
 import com.kaua.file.processor.AbstractRepositoryTest;
+import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.ValidationException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
 import org.junit.jupiter.api.Assertions;
@@ -56,6 +57,37 @@ class ImportJobRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(1, countImportJobs());
 
         final var aActualImportJob = this.importJobRepository().importJobOfFileHash(aFileHash).get();
+
+        Assertions.assertEquals(aImportJob.getId().value(), aActualImportJob.getId().value());
+        Assertions.assertEquals(aImportJob.getFileRef(), aActualImportJob.getFileRef());
+        Assertions.assertEquals(aImportJob.getFileHash(), aActualImportJob.getFileHash());
+        Assertions.assertEquals(aImportJob.getStatus(), aActualImportJob.getStatus());
+        Assertions.assertEquals(aImportJob.getCreatedAt(), aActualImportJob.getCreatedAt());
+        Assertions.assertEquals(aImportJob.getUpdatedAt(), aActualImportJob.getUpdatedAt());
+        Assertions.assertTrue(aActualImportJob.getDeletedAt().isEmpty());
+    }
+
+    @Test
+    void givenAValidNewImportJobWithEvents_whenCallsSave_shouldPersistItAndGenerateOutboxEvent() {
+        Assertions.assertEquals(0, countImportJobs());
+        Assertions.assertEquals(0, countOutboxEvents());
+
+        final var aFileRef = "file-ref";
+        final var aFileHash = "file-hash";
+
+        final var aImportJob = ImportJob.newImportJob(
+                aFileRef,
+                aFileHash
+        );
+        aImportJob.registerEvent(new ImportJobCreatedEvent(
+                aImportJob.getId().value().toString(),
+                aImportJob.getVersion()
+        ));
+
+        final var aActualImportJob = this.importJobRepository().save(aImportJob);
+
+        Assertions.assertEquals(1, countImportJobs());
+        Assertions.assertEquals(1, countOutboxEvents());
 
         Assertions.assertEquals(aImportJob.getId().value(), aActualImportJob.getId().value());
         Assertions.assertEquals(aImportJob.getFileRef(), aActualImportJob.getFileRef());
