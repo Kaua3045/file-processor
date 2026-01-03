@@ -1,12 +1,15 @@
 package com.kaua.file.processor;
 
+import com.kaua.file.processor.infrastructure.configurations.OtelConfig;
 import com.kaua.file.processor.infrastructure.configurations.SecurityConfig;
 import com.kaua.file.processor.infrastructure.idempotency.gateways.InMemoryIdempotencyKeyGateway;
+import com.kaua.file.processor.infrastructure.wrapper.TracerWrapperOtel;
 import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.lang.annotation.*;
 
@@ -15,7 +18,8 @@ import java.lang.annotation.*;
 @Inherited
 @ActiveProfiles("test-integration")
 @WebMvcTest
-@Import({SecurityConfig.class, InMemoryIdempotencyKeyGateway.class, ObservationTest.OpenTelemetryTestConfig.class, IntegrationTestConfig.class})
+@TestPropertySource(properties = "application.otel.memory-exporter=true")
+@Import({SecurityConfig.class, IntegrationTestConfig.class, OtelConfig.class, InMemoryIdempotencyKeyGateway.class, ObservationTest.OpenTelemetryTestConfig.class, TracerWrapperOtel.class})
 @Tag("integrationTest")
 public @interface ControllerTest {
 

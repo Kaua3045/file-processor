@@ -13,7 +13,7 @@ public class IntegrationTestConfig {
     @Bean
     public BuildProperties buildProperties() {
         Properties properties = new Properties();
-        properties.setProperty("name", "events-platform");
+        properties.setProperty("name", "file-processor");
         properties.setProperty("version", "0.0.1");
         properties.setProperty("time", InstantUtils.now().toString());
         return new BuildProperties(properties);

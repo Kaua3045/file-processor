@@ -14,17 +14,17 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractCacheConfig {
 
     @Container
-    private static final GenericContainer<?> redis = new GenericContainer<>(
+    static final GenericContainer<?> redis = new GenericContainer<>(
             DockerImageName.parse("redis:alpine"))
             .withExposedPorts(6379)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
-    static {
-        redis.start();
-    }
+//    static {
+//        redis.start();
+//    }
 
     @DynamicPropertySource
-    public static void redisProperties(final DynamicPropertyRegistry registry) {
+    static void redisProperties(final DynamicPropertyRegistry registry) {
         registry.add("redis.hosts", redis::getHost);
         registry.add("redis.ports", redis::getFirstMappedPort);
     }
