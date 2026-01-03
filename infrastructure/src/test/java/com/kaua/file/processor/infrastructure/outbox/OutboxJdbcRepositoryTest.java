@@ -50,6 +50,111 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(aOutboxEntity.occurredOn(), savedOutboxEntity.occurredOn());
     }
 
+    @Test
+    void givenAValidOutboxStatusIsPending_whenCallsOutboxOfStatusAndOccurredOn_shouldReturnOutboxEntities() {
+        Assertions.assertEquals(0, countOutboxEvents());
+        final var aAggregateId = IdentifierUtils.generateNewULID().toString();
+        final var aDomainEvent = new FakeDomainEvent(
+                aAggregateId,
+                1L
+        );
+
+        final var aOutboxEntity = new OutboxEntity(
+                ULID.random().toString(),
+                aAggregateId,
+                aDomainEvent.eventType(),
+                aDomainEvent.aggregateVersion(),
+                OutboxStatus.PENDING,
+                Json.writeValueAsString(aDomainEvent),
+                aDomainEvent.occurredOn()
+        );
+
+        this.outboxRepository().save(aOutboxEntity);
+
+        final var aOutboxEntityFailed = new OutboxEntity(
+                ULID.random().toString(),
+                aAggregateId,
+                aDomainEvent.eventType(),
+                aDomainEvent.aggregateVersion(),
+                OutboxStatus.FAILED,
+                Json.writeValueAsString(aDomainEvent),
+                aDomainEvent.occurredOn()
+        );
+
+        this.outboxRepository().save(aOutboxEntityFailed);
+
+        Assertions.assertEquals(2, countOutboxEvents());
+
+        final var outboxEntities = this.outboxRepository().outboxOfStatusAndOccurredOn(OutboxStatus.PENDING);
+
+        Assertions.assertEquals(1, outboxEntities.size());
+        final var retrievedOutboxEntity = outboxEntities.getFirst();
+
+        Assertions.assertEquals(aOutboxEntity.eventId(), retrievedOutboxEntity.eventId());
+        Assertions.assertEquals(aOutboxEntity.aggregateId(), retrievedOutboxEntity.aggregateId());
+        Assertions.assertEquals(aOutboxEntity.eventType(), retrievedOutboxEntity.eventType());
+        Assertions.assertEquals(aOutboxEntity.version(), retrievedOutboxEntity.version());
+        Assertions.assertEquals(aOutboxEntity.status(), retrievedOutboxEntity.status());
+        Assertions.assertEquals(aOutboxEntity.payload(), retrievedOutboxEntity.payload());
+        Assertions.assertEquals(aOutboxEntity.occurredOn(), retrievedOutboxEntity.occurredOn());
+    }
+
+    @Test
+    void givenAValidOutboxEntity_whenCallsMarkAsCompleted_shouldUpdateItsStatus() {
+        Assertions.assertEquals(0, countOutboxEvents());
+        final var aAggregateId = IdentifierUtils.generateNewULID().toString();
+        final var aDomainEvent = new FakeDomainEvent(
+                aAggregateId,
+                1L
+        );
+
+        final var aOutboxEntity = new OutboxEntity(
+                ULID.random().toString(),
+                aAggregateId,
+                aDomainEvent.eventType(),
+                aDomainEvent.aggregateVersion(),
+                OutboxStatus.PENDING,
+                Json.writeValueAsString(aDomainEvent),
+                aDomainEvent.occurredOn()
+        );
+
+        this.outboxRepository().save(aOutboxEntity);
+
+        Assertions.assertEquals(1, countOutboxEvents());
+
+        final var completedOutboxEntity = this.outboxRepository().markAsCompleted(aOutboxEntity);
+
+        Assertions.assertEquals(OutboxStatus.COMPLETED, completedOutboxEntity.status());
+    }
+
+    @Test
+    void givenAValidOutboxEntity_whenCallsMarkAsFailed_shouldUpdateItsStatus() {
+        Assertions.assertEquals(0, countOutboxEvents());
+        final var aAggregateId = IdentifierUtils.generateNewULID().toString();
+        final var aDomainEvent = new FakeDomainEvent(
+                aAggregateId,
+                1L
+        );
+
+        final var aOutboxEntity = new OutboxEntity(
+                ULID.random().toString(),
+                aAggregateId,
+                aDomainEvent.eventType(),
+                aDomainEvent.aggregateVersion(),
+                OutboxStatus.PENDING,
+                Json.writeValueAsString(aDomainEvent),
+                aDomainEvent.occurredOn()
+        );
+
+        this.outboxRepository().save(aOutboxEntity);
+
+        Assertions.assertEquals(1, countOutboxEvents());
+
+        final var failedOutboxEntity = this.outboxRepository().markAsFailed(aOutboxEntity);
+
+        Assertions.assertEquals(OutboxStatus.FAILED, failedOutboxEntity.status());
+    }
+
     private record FakeDomainEvent(
             String eventId,
             String eventType,
