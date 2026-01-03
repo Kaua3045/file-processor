@@ -1,6 +1,5 @@
 package com.kaua.file.processor.infrastructure.repositories;
 
-import com.kaua.file.processor.domain.exceptions.InternalErrorException;
 import com.kaua.file.processor.domain.importjob.StoredFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -78,12 +77,15 @@ class LocalFileStorageRepositoryTest {
         var repository = new LocalFileStorageRepository(tempDir);
 
         Path outsideFile = Files.createTempFile("outside", ".txt");
+        Files.writeString(outsideFile, "secret");
 
         try {
-            assertThrows(
-                    InternalErrorException.class,
-                    () -> repository.delete(outsideFile.toString())
+            assertDoesNotThrow(() ->
+                    repository.delete(outsideFile.toString())
             );
+
+            assertTrue(Files.exists(outsideFile));
+
         } finally {
             Files.deleteIfExists(outsideFile);
         }
