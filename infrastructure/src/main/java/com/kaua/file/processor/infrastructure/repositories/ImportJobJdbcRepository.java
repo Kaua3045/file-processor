@@ -5,12 +5,17 @@ import com.kaua.file.processor.domain.importjob.ImportJob;
 import com.kaua.file.processor.domain.importjob.ImportJobId;
 import com.kaua.file.processor.domain.importjob.ImportJobStatus;
 import com.kaua.file.processor.domain.utils.ULID;
+import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import com.kaua.file.processor.infrastructure.jdbc.DatabaseClient;
 import com.kaua.file.processor.infrastructure.jdbc.JdbcUtils;
 import com.kaua.file.processor.infrastructure.jdbc.RowMap;
+import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
+import com.kaua.file.processor.infrastructure.outbox.OutboxRepository;
+import com.kaua.file.processor.infrastructure.outbox.OutboxStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
@@ -24,21 +29,37 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
     private static final Logger log = LoggerFactory.getLogger(ImportJobJdbcRepository.class);
 
     private final DatabaseClient databaseClient;
+    private final OutboxRepository outboxRepository;
 
-    public ImportJobJdbcRepository(final DatabaseClient databaseClient) {
+    public ImportJobJdbcRepository(
+            final DatabaseClient databaseClient,
+            final OutboxRepository outboxRepository
+    ) {
         this.databaseClient = Objects.requireNonNull(databaseClient);
+        this.outboxRepository = Objects.requireNonNull(outboxRepository);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public ImportJob save(final ImportJob importJob) {
         if (importJob.getVersion() == 0) {
             log.info("Inserting new import job with id `{}`", importJob.getId());
             create(importJob);
+            importJob.getDomainEvents().forEach(it ->
+                    this.outboxRepository.save(new OutboxEntity(
+                            it.eventId(),
+                            it.aggregateId(),
+                            it.eventType(),
+                            it.aggregateVersion(),
+                            OutboxStatus.PENDING,
+                            Json.writeValueAsString(it),
+                            it.occurredOn()
+                    ))
+            );
             log.info("Import job with id `{}` inserted successfully", importJob.getId());
         }
 
-        importJob.incrementVersion();;
+        importJob.incrementVersion();
         return importJob;
     }
 
