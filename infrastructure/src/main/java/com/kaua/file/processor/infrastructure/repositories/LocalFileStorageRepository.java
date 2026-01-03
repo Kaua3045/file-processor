@@ -56,8 +56,11 @@ public class LocalFileStorageRepository implements FileStorageRepository {
     public void delete(final String fileRef) {
         try {
             log.info("Deleting file at `{}`", fileRef);
-            final var aPath = Paths.get(fileRef).normalize().toAbsolutePath();
-            final var aBasePath = baseDir.toAbsolutePath();
+            final var aBasePath = baseDir.toAbsolutePath().normalize();
+
+            final var aPath = aBasePath
+                    .resolve(Paths.get(fileRef).getFileName())
+                    .normalize();
 
             if (!aPath.startsWith(aBasePath)) {
                 log.error("Attempted to delete file outside of base directory: `{}`", fileRef);
