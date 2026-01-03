@@ -28,13 +28,13 @@ public abstract class AbstractRepositoryTest {
     @Autowired
     private NamedParameterJdbcOperations operations;
 
-    private ImportJobJdbcRepository importJobJdbcRepository;
+    private ImportJobRepository importJobJdbcRepository;
     private OutboxRepository outboxRepository;
 
     @BeforeEach
     void setUp() {
-        this.importJobJdbcRepository = new ImportJobJdbcRepository(new JdbcClientAdapter(jdbcClient, operations));
         this.outboxRepository = new OutboxJdbcRepository(new JdbcClientAdapter(jdbcClient, operations));
+        this.importJobJdbcRepository = new ImportJobJdbcRepository(new JdbcClientAdapter(jdbcClient, operations), outboxRepository);
     }
 
     protected int countImportJobs() {
