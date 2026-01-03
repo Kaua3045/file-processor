@@ -49,6 +49,16 @@ class LocalFileStorageRepositoryTest {
     }
 
     @Test
+    void shouldThrowWhenStoringToInvalidPath() {
+        var repository = new LocalFileStorageRepository(Path.of("/invalid/path"));
+        var inputStream = new ByteArrayInputStream("data".getBytes());
+
+        assertThrows(Exception.class, () ->
+                repository.store("file.txt", inputStream)
+        );
+    }
+
+    @Test
     void shouldDeleteStoredFile() {
         var repository = new LocalFileStorageRepository(tempDir);
         var inputStream = new ByteArrayInputStream("delete-me".getBytes());
