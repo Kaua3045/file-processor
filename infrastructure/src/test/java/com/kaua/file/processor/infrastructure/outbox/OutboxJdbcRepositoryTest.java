@@ -34,7 +34,8 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
                 Json.writeValueAsString(aDomainEvent),
-                aDomainEvent.occurredOn()
+                aDomainEvent.occurredOn(),
+                aDomainEvent.getClass().getCanonicalName()
         );
 
         final var savedOutboxEntity = this.outboxRepository().save(aOutboxEntity);
@@ -48,6 +49,7 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(aOutboxEntity.status(), savedOutboxEntity.status());
         Assertions.assertEquals(aOutboxEntity.payload(), savedOutboxEntity.payload());
         Assertions.assertEquals(aOutboxEntity.occurredOn(), savedOutboxEntity.occurredOn());
+        Assertions.assertEquals(aOutboxEntity.eventClass(), savedOutboxEntity.eventClass());
     }
 
     @Test
@@ -66,7 +68,8 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
                 Json.writeValueAsString(aDomainEvent),
-                aDomainEvent.occurredOn()
+                aDomainEvent.occurredOn(),
+                aDomainEvent.getClass().getCanonicalName()
         );
 
         this.outboxRepository().save(aOutboxEntity);
@@ -78,7 +81,8 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.FAILED,
                 Json.writeValueAsString(aDomainEvent),
-                aDomainEvent.occurredOn()
+                aDomainEvent.occurredOn(),
+                aDomainEvent.getClass().getCanonicalName()
         );
 
         this.outboxRepository().save(aOutboxEntityFailed);
@@ -97,6 +101,7 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(aOutboxEntity.status(), retrievedOutboxEntity.status());
         Assertions.assertEquals(aOutboxEntity.payload(), retrievedOutboxEntity.payload());
         Assertions.assertEquals(aOutboxEntity.occurredOn(), retrievedOutboxEntity.occurredOn());
+        Assertions.assertEquals(aOutboxEntity.eventClass(), retrievedOutboxEntity.eventClass());
     }
 
     @Test
@@ -115,7 +120,8 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
                 Json.writeValueAsString(aDomainEvent),
-                aDomainEvent.occurredOn()
+                aDomainEvent.occurredOn(),
+                aDomainEvent.getClass().getCanonicalName()
         );
 
         this.outboxRepository().save(aOutboxEntity);
@@ -143,7 +149,8 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
                 Json.writeValueAsString(aDomainEvent),
-                aDomainEvent.occurredOn()
+                aDomainEvent.occurredOn(),
+                aDomainEvent.getClass().getCanonicalName()
         );
 
         this.outboxRepository().save(aOutboxEntity);
