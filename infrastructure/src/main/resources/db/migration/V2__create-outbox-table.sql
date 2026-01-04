@@ -5,5 +5,6 @@ CREATE TABLE outbox (
     event_type VARCHAR(255) NOT NULL,
     status VARCHAR(50) NOT NULL,
     payload TEXT NOT NULL,
-    occurred_on TIMESTAMP WITH TIME ZONE NOT NULL
+    occurred_on TIMESTAMP WITH TIME ZONE NOT NULL,
+    event_class VARCHAR(255) NOT NULL
 );
