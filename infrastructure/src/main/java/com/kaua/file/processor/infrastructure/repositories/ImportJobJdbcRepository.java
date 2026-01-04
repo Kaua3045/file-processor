@@ -53,7 +53,8 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
                             it.aggregateVersion(),
                             OutboxStatus.PENDING,
                             Json.writeValueAsString(it),
-                            it.occurredOn()
+                            it.occurredOn(),
+                            it.getClass().getCanonicalName()
                     ))
             );
             log.info("Import job with id `{}` inserted successfully", importJob.getId());
