@@ -1,5 +1,4 @@
 application:
-  eventbus: in-memory
   otel:
     memory-exporter: true
   name: file-processor

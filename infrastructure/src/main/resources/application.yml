@@ -1,4 +1,6 @@
 application:
+  eventbus:
+    in-memory: true
   otel:
     memory-exporter: true
 
