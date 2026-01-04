@@ -9,6 +9,7 @@ public record OutboxEntity(
         long version,
         OutboxStatus status,
         String payload,
-        Instant occurredOn
+        Instant occurredOn,
+        String eventClass
 ) {
 }
