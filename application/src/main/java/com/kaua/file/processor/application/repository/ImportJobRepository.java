@@ -9,4 +9,6 @@ public interface ImportJobRepository {
     ImportJob save(ImportJob importJob);
 
     Optional<ImportJob> importJobOfFileHash(String fileHash);
+
+    Optional<ImportJob> importJobOfId(String importJobId);
 }
