@@ -6,6 +6,7 @@ import com.kaua.file.processor.domain.importjob.ImportJobId;
 import com.kaua.file.processor.domain.importjob.ImportJobStatus;
 import com.kaua.file.processor.domain.utils.ULID;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
+import com.kaua.file.processor.infrastructure.exceptions.ConflictException;
 import com.kaua.file.processor.infrastructure.jdbc.DatabaseClient;
 import com.kaua.file.processor.infrastructure.jdbc.JdbcUtils;
 import com.kaua.file.processor.infrastructure.jdbc.RowMap;
@@ -58,6 +59,10 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
                     ))
             );
             log.info("Import job with id `{}` inserted successfully", importJob.getId());
+        } else {
+            log.info("Updating import job with id `{}`", importJob.getId());
+            update(importJob);
+            log.info("Import job with id `{}` updated successfully", importJob.getId());
         }
 
         importJob.incrementVersion();
@@ -72,13 +77,40 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
         return this.databaseClient.queryOne(aSql, Map.of("file_hash", fileHash), importJobMapper());
     }
 
+    @Override
+    public Optional<ImportJob> importJobOfId(final String importJobId) {
+        final var aSql = "SELECT * FROM import_jobs WHERE id = :id";
+        return this.databaseClient.queryOne(aSql, Map.of("id", importJobId), importJobMapper());
+    }
+
     private void create(final ImportJob aImportJob) {
         final var aSql = """
-                INSERT INTO import_jobs (id, file_ref, file_hash, status, created_at, updated_at, deleted_at, version)
-                VALUES (:id, :file_ref, :file_hash, :status, :created_at, :updated_at, :deleted_at, (:version + 1))
+                INSERT INTO import_jobs (id, file_ref, file_hash, status, created_at, updated_at, deleted_at, version, processed_rows)
+                VALUES (:id, :file_ref, :file_hash, :status, :created_at, :updated_at, :deleted_at, (:version + 1), :processed_rows)
                 """;
 
         executeUpdate(aSql, aImportJob);
+    }
+
+    private void update(final ImportJob aImportJob) {
+        final var aSql = """
+                UPDATE import_jobs
+                SET file_ref = :file_ref,
+                    file_hash = :file_hash,
+                    status = :status,
+                    created_at = :created_at,
+                    updated_at = :updated_at,
+                    deleted_at = :deleted_at,
+                    version = (:version + 1),
+                    processed_rows = :processed_rows
+                WHERE id = :id AND version = (:version)
+                """;
+
+        final var rowsUpdated = executeUpdate(aSql, aImportJob);
+        if (rowsUpdated == 0) {
+            throw ConflictException.with("ImportJob with identifier %s and version %d does not match, import job was updated by another transaction"
+                    .formatted(aImportJob.getId().value(), aImportJob.getVersion()));
+        }
     }
 
     private int executeUpdate(final String aSql, final ImportJob aImportJob) {
@@ -91,6 +123,7 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
         aParams.put("updated_at", aImportJob.getUpdatedAt());
         aParams.put("deleted_at", aImportJob.getDeletedAt().orElse(null));
         aParams.put("version", aImportJob.getVersion());
+        aParams.put("processed_rows", aImportJob.getProcessedRows());
 
         return this.databaseClient.update(aSql, aParams);
     }
@@ -104,7 +137,8 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
                 ImportJobStatus.from(rs.getString("status")).orElse(null),
                 JdbcUtils.getInstant(rs, "created_at"),
                 JdbcUtils.getInstant(rs, "updated_at"),
-                JdbcUtils.getInstant(rs, "deleted_at")
+                JdbcUtils.getInstant(rs, "deleted_at"),
+                rs.getLong("processed_rows")
         );
     }
 }
