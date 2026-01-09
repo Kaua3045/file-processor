@@ -115,4 +115,29 @@ class LocalFileStorageRepositoryTest {
         assertFalse(fileName.contains(" "));
         assertTrue(fileName.endsWith(".txt"));
     }
+
+    @Test
+    void shouldLoadStoredFile() throws Exception {
+        var repository = new LocalFileStorageRepository(tempDir);
+        var content = "load me";
+        var inputStream = new ByteArrayInputStream(content.getBytes());
+
+        StoredFile stored = repository.store("load.txt", inputStream);
+
+        try (var in = repository.load(stored.fileRef())) {
+            byte[] loadedBytes = in.readAllBytes();
+            String loadedContent = new String(loadedBytes);
+
+            assertEquals(content, loadedContent);
+        }
+    }
+
+    @Test
+    void shouldThrowWhenLoadingNonExistentFile() {
+        var repository = new LocalFileStorageRepository(tempDir);
+
+        assertThrows(Exception.class, () ->
+                repository.load("non-existent.txt")
+        );
+    }
 }
