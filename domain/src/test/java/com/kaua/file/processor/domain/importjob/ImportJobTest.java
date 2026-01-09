@@ -30,6 +30,7 @@ class ImportJobTest extends UnitTest {
         assertNotNull(actualImportJob.getCreatedAt());
         assertNotNull(actualImportJob.getUpdatedAt());
         assertTrue(actualImportJob.getDeletedAt().isEmpty());
+        assertEquals(0, actualImportJob.getProcessedRows());
         assertDoesNotThrow(() -> actualImportJob.validate(NotificationHandler.create()));
     }
 
@@ -115,6 +116,7 @@ class ImportJobTest extends UnitTest {
         final var expectedCreatedAt = now();
         final var expectedUpdatedAt = now();
         final var expectedDeletedAt = now();
+        final var expectedProcessedRows = 150L;
 
         final var actualImportJob = ImportJob.with(
                 expectedId,
@@ -124,7 +126,8 @@ class ImportJobTest extends UnitTest {
                 expectedStatus,
                 expectedCreatedAt,
                 expectedUpdatedAt,
-                expectedDeletedAt
+                expectedDeletedAt,
+                expectedProcessedRows
         );
 
         assertEquals(expectedId, actualImportJob.getId());
@@ -136,5 +139,47 @@ class ImportJobTest extends UnitTest {
         assertEquals(expectedUpdatedAt, actualImportJob.getUpdatedAt());
         assertTrue(actualImportJob.getDeletedAt().isPresent());
         assertEquals(expectedDeletedAt, actualImportJob.getDeletedAt().get());
+        assertEquals(expectedProcessedRows, actualImportJob.getProcessedRows());
+    }
+
+    @Test
+    void givenAValidCount_whenCallsIncrementProcessed_thenShouldIncrementProcessedRows() {
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
+        final var expectedCount = 5L;
+        final var expectedProcessedRows = importJob.getProcessedRows() + expectedCount;
+
+        importJob.incrementProcessed(expectedCount);
+
+        assertEquals(expectedProcessedRows, importJob.getProcessedRows());
+    }
+
+    @Test
+    void givenAValidImportJob_whenCallsStart_thenShouldUpdateStatusAndUpdatedAt() {
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
+
+        importJob.start();
+
+        assertEquals(ImportJobStatus.PROCESSING, importJob.getStatus());
+        assertNotNull(importJob.getUpdatedAt());
+    }
+
+    @Test
+    void givenAValidImportJob_whenCallsComplete_thenShouldUpdateStatusAndUpdatedAt() {
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
+
+        importJob.complete();
+
+        assertEquals(ImportJobStatus.COMPLETED, importJob.getStatus());
+        assertNotNull(importJob.getUpdatedAt());
+    }
+
+    @Test
+    void givenAValidImportJob_whenCallsFail_thenShouldUpdateStatusAndUpdatedAt() {
+        final var importJob = ImportJob.newImportJob("file-ref", "file-hash");
+
+        importJob.fail();
+
+        assertEquals(ImportJobStatus.FAILED, importJob.getStatus());
+        assertNotNull(importJob.getUpdatedAt());
     }
 }
