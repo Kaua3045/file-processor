@@ -9,4 +9,6 @@ public interface FileStorageRepository {
     StoredFile store(String fileName, InputStream content);
 
     void delete(String fileRef);
+
+    InputStream load(String fileRef);
 }
