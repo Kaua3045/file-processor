@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,5 +115,46 @@ class LocalFileStorageRepositoryTest {
         assertFalse(fileName.contains("@"));
         assertFalse(fileName.contains(" "));
         assertTrue(fileName.endsWith(".txt"));
+    }
+
+    @Test
+    void shouldLotFileOutsideBaseDir() throws IOException {
+        var repository = new LocalFileStorageRepository(tempDir);
+        var content = "outside load test";
+        var inputStream = new ByteArrayInputStream(content.getBytes());
+
+        StoredFile stored = repository.store("outside_load.txt", inputStream);
+
+        try (var in = repository.load(stored.fileRef())) {
+            byte[] loadedBytes = in.readAllBytes();
+            String loadedContent = new String(loadedBytes);
+
+            assertEquals(content, loadedContent);
+        }
+    }
+
+    @Test
+    void shouldLoadStoredFile() throws Exception {
+        var repository = new LocalFileStorageRepository(tempDir);
+        var content = "load me";
+        var inputStream = new ByteArrayInputStream(content.getBytes());
+
+        StoredFile stored = repository.store("load.txt", inputStream);
+
+        try (var in = repository.load(stored.fileRef())) {
+            byte[] loadedBytes = in.readAllBytes();
+            String loadedContent = new String(loadedBytes);
+
+            assertEquals(content, loadedContent);
+        }
+    }
+
+    @Test
+    void shouldThrowWhenLoadingNonExistentFile() {
+        var repository = new LocalFileStorageRepository(tempDir);
+
+        assertThrows(Exception.class, () ->
+                repository.load("non-existent.txt")
+        );
     }
 }

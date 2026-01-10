@@ -2,6 +2,8 @@ package com.kaua.file.processor.infrastructure.configurations.usecases;
 
 import com.kaua.file.processor.application.importjob.create.CreateImportJobUseCase;
 import com.kaua.file.processor.application.importjob.create.DefaultCreateImportJobUseCase;
+import com.kaua.file.processor.application.importjob.process.DefaultProcessImportJobUseCase;
+import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
 import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
 import com.kaua.file.processor.application.wrapper.TracerWrapper;
@@ -21,6 +23,17 @@ public class ImportJobUseCases {
                 fileStorageRepository,
                 importJobRepository,
                 tracerWrapper
+        );
+    }
+
+    @Bean
+    public ProcessImportJobUseCase processImportJobUseCase(
+            final ImportJobRepository importJobRepository,
+            final FileStorageRepository fileStorageRepository
+    ) {
+        return new DefaultProcessImportJobUseCase(
+                importJobRepository,
+                fileStorageRepository
         );
     }
 }

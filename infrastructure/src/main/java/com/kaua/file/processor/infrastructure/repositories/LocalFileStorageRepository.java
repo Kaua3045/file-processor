@@ -75,6 +75,29 @@ public class LocalFileStorageRepository implements FileStorageRepository {
         }
     }
 
+    @Override
+    public InputStream load(final String fileRef) {
+        try {
+            log.info("Loading file at `{}`", fileRef);
+            final var aBasePath = baseDir.toAbsolutePath().normalize();
+
+            final var aPath = aBasePath
+                    .resolve(Paths.get(fileRef).getFileName())
+                    .normalize();
+
+            if (!aPath.startsWith(aBasePath)) {
+                log.error("Attempted to load file outside of base directory: `{}`", fileRef);
+                throw InternalErrorException.with("Cannot load file outside of base directory");
+            }
+
+            log.info("File at `{}` loaded successfully", fileRef);
+            return Files.newInputStream(aPath);
+        } catch (Exception ex) {
+            log.error("Error loading file at `{}`", fileRef, ex);
+            throw InternalErrorException.with("Error loading file at `%s`".formatted(fileRef));
+        }
+    }
+
     private Path createPath(final String originalName) {
         try {
             Files.createDirectories(baseDir);

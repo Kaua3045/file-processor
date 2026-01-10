@@ -4,6 +4,7 @@ import com.kaua.file.processor.AbstractRepositoryTest;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.ValidationException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
+import com.kaua.file.processor.infrastructure.exceptions.ConflictException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.jdbc.Sql;
@@ -118,5 +119,106 @@ class ImportJobRepositoryTest extends AbstractRepositoryTest {
 
         Assertions.assertEquals(aExpectedErrorMessage, aActualException.getErrors().getFirst().message());
         Assertions.assertEquals(aExpectedErrorProperty, aActualException.getErrors().getFirst().property());
+    }
+
+    @Test
+    void givenAnInvalidImportJobId_whenCallsImportJobOfId_shouldReturnEmpty() {
+        Assertions.assertEquals(0, countImportJobs());
+
+        final var aImportJobId = "invalid-id";
+
+        final var aActualImportJob = this.importJobRepository().importJobOfId(aImportJobId);
+
+        Assertions.assertTrue(aActualImportJob.isEmpty());
+    }
+
+    @Test
+    void givenAValidImportJobId_whenCallsImportJobOfId_shouldReturnIt() {
+        Assertions.assertEquals(0, countImportJobs());
+
+        final var aFileRef = "file-ref";
+        final var aFileHash = "file-hash";
+
+        final var aImportJob = ImportJob.newImportJob(
+                aFileRef,
+                aFileHash
+        );
+
+        this.importJobRepository().save(aImportJob);
+
+        Assertions.assertEquals(1, countImportJobs());
+
+        final var aImportJobId = aImportJob.getId().value().toString();
+
+        final var aActualImportJob = this.importJobRepository().importJobOfId(aImportJobId).get();
+
+        Assertions.assertEquals(aImportJob.getId().value(), aActualImportJob.getId().value());
+        Assertions.assertEquals(aImportJob.getFileRef(), aActualImportJob.getFileRef());
+        Assertions.assertEquals(aImportJob.getFileHash(), aActualImportJob.getFileHash());
+        Assertions.assertEquals(aImportJob.getStatus(), aActualImportJob.getStatus());
+        Assertions.assertEquals(aImportJob.getCreatedAt(), aActualImportJob.getCreatedAt());
+        Assertions.assertEquals(aImportJob.getUpdatedAt(), aActualImportJob.getUpdatedAt());
+        Assertions.assertTrue(aActualImportJob.getDeletedAt().isEmpty());
+        Assertions.assertEquals(0, aActualImportJob.getProcessedRows());
+    }
+
+    @Test
+    void givenAValidUpdatedImportJob_whenCallsSave_shouldUpdateIt() {
+        Assertions.assertEquals(0, countImportJobs());
+
+        final var aFileRef = "file-ref";
+        final var aFileHash = "file-hash";
+
+        final var aImportJob = ImportJob.newImportJob(
+                aFileRef,
+                aFileHash
+        );
+
+        this.importJobRepository().save(aImportJob);
+
+        Assertions.assertEquals(1, countImportJobs());
+
+        aImportJob.start();
+        aImportJob.incrementProcessed(1500);
+        final var aActualImportJob = this.importJobRepository().save(aImportJob);
+
+        Assertions.assertEquals(1, countImportJobs());
+
+        Assertions.assertEquals(aImportJob.getId().value(), aActualImportJob.getId().value());
+        Assertions.assertEquals(aImportJob.getFileRef(), aActualImportJob.getFileRef());
+        Assertions.assertEquals(aImportJob.getFileHash(), aActualImportJob.getFileHash());
+        Assertions.assertEquals(aImportJob.getStatus(), aActualImportJob.getStatus());
+        Assertions.assertEquals(aImportJob.getCreatedAt(), aActualImportJob.getCreatedAt());
+        Assertions.assertEquals(aImportJob.getUpdatedAt(), aActualImportJob.getUpdatedAt());
+        Assertions.assertTrue(aActualImportJob.getDeletedAt().isEmpty());
+        Assertions.assertEquals(1500, aActualImportJob.getProcessedRows());
+    }
+
+    @Test
+    void givenAValidImportJobButVersionMismatch_whenCallSave_thenThrowsConflictException() {
+        Assertions.assertEquals(0, countImportJobs());
+
+        final var aFileRef = "file-ref";
+        final var aFileHash = "file-hash";
+
+        final var aImportJob = ImportJob.newImportJob(
+                aFileRef,
+                aFileHash
+        );
+
+        this.importJobRepository().save(aImportJob);
+
+        aImportJob.start();
+        aImportJob.incrementVersion();
+
+        final var expectedMessage = "ImportJob with identifier %s and version %d does not match, import job was updated by another transaction"
+                .formatted(aImportJob.getId().value(), aImportJob.getVersion());
+
+        final var aException = Assertions.assertThrows(
+                ConflictException.class,
+                () -> this.importJobRepository().save(aImportJob)
+        );
+
+        Assertions.assertEquals(expectedMessage, aException.getMessage());
     }
 }

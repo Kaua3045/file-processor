@@ -16,6 +16,7 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
     private Instant createdAt;
     private Instant updatedAt;
     private Instant deletedAt;
+    private long processedRows;
 
     private ImportJob(
             final ImportJobId aImportJobId,
@@ -25,7 +26,8 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
             final ImportJobStatus aStatus,
             final Instant aCreatedAt,
             final Instant aUpdatedAt,
-            final Instant aDeletedAt
+            final Instant aDeletedAt,
+            final long aProcessedRows
     ) {
         super(aImportJobId, aVersion);
         setFileRef(aFileRef);
@@ -34,6 +36,7 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
         setCreatedAt(aCreatedAt);
         setUpdatedAt(aUpdatedAt);
         setDeletedAt(aDeletedAt);
+        setProcessedRows(aProcessedRows);
     }
 
     public static ImportJob newImportJob(final String aFileRef, final String aFileHash) {
@@ -47,7 +50,8 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
                 ImportJobStatus.CREATED,
                 aNow,
                 aNow,
-                null
+                null,
+                0L
         );
     }
 
@@ -59,7 +63,8 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
             final ImportJobStatus aStatus,
             final Instant aCreatedAt,
             final Instant aUpdatedAt,
-            final Instant aDeletedAt
+            final Instant aDeletedAt,
+            final long aProcessedRows
     ) {
         return new ImportJob(
                 aId,
@@ -69,8 +74,28 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
                 aStatus,
                 aCreatedAt,
                 aUpdatedAt,
-                aDeletedAt
+                aDeletedAt,
+                aProcessedRows
         );
+    }
+
+    public void start() {
+        this.setStatus(ImportJobStatus.PROCESSING);
+        this.setUpdatedAt(InstantUtils.now());
+    }
+
+    public void complete() {
+        this.setStatus(ImportJobStatus.COMPLETED);
+        this.setUpdatedAt(InstantUtils.now());
+    }
+
+    public void fail() {
+        this.setStatus(ImportJobStatus.FAILED);
+        this.setUpdatedAt(InstantUtils.now());
+    }
+
+    public void incrementProcessed(final long count) {
+        this.processedRows += count;
     }
 
     public String getFileRef() {
@@ -95,6 +120,10 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
 
     public Optional<Instant> getDeletedAt() {
         return Optional.ofNullable(deletedAt);
+    }
+
+    public long getProcessedRows() {
+        return processedRows;
     }
 
     private void setFileRef(final String fileRef) {
@@ -125,6 +154,10 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
         this.deletedAt = deletedAt;
     }
 
+    private void setProcessedRows(final long processedRows) {
+        this.processedRows = processedRows;
+    }
+
     @Override
     public void validate(ValidationHandler aHandler) {
     }
@@ -138,6 +171,7 @@ public class ImportJob extends AggregateRoot<ImportJobId> {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", deletedAt=" + deletedAt +
+                ", processedRows=" + processedRows +
                 ')';
     }
 }
