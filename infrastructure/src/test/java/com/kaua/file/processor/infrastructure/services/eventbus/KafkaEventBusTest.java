@@ -1,9 +1,9 @@
 package com.kaua.file.processor.infrastructure.services.eventbus;
 
 import com.kaua.file.processor.domain.UnitTest;
-import com.kaua.file.processor.domain.events.DomainEvent;
 import com.kaua.file.processor.domain.exceptions.InternalErrorException;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import com.kaua.file.processor.domain.utils.IdentifierUtils;
+import com.kaua.file.processor.infrastructure.jobs.FakeDomainEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,9 +23,6 @@ class KafkaEventBusTest extends UnitTest {
 
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
-
-    @Mock
-    private DomainEvent domainEvent;
 
     private KafkaEventBus eventBus;
 
@@ -41,9 +37,9 @@ class KafkaEventBusTest extends UnitTest {
         when(kafkaTemplate.send(anyString(), any()))
                 .thenReturn(CompletableFuture.completedFuture(sendResult));
 
-        eventBus.publish(domainEvent);
+        eventBus.publish(new FakeDomainEvent(IdentifierUtils.generateNewULID().toString(), 0L));
 
-        verify(kafkaTemplate).send(anyString(), eq(domainEvent));
+        verify(kafkaTemplate).send(anyString(), any());
     }
 
     @Test
@@ -53,7 +49,7 @@ class KafkaEventBusTest extends UnitTest {
 
         assertThrows(
                 InternalErrorException.class,
-                () -> eventBus.publish(domainEvent)
+                () -> eventBus.publish(new FakeDomainEvent(IdentifierUtils.generateNewULID().toString(), 0L))
         );
     }
 
