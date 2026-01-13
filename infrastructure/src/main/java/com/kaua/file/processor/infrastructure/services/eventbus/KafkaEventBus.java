@@ -1,6 +1,7 @@
 package com.kaua.file.processor.infrastructure.services.eventbus;
 
 import com.kaua.file.processor.domain.events.DomainEvent;
+import com.kaua.file.processor.domain.exceptions.InternalErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -24,18 +25,22 @@ public class KafkaEventBus implements EventBus {
 
     @Override
     public void publish(final DomainEvent event) {
-        log.info("Publishing event {} to topic {}", event.getClass().getSimpleName(), topic);
-        final var future = kafkaTemplate.send(topic, event);
-        future.whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("Failed to publish event {} to topic {}", event.getClass().getSimpleName(), event.eventType(), ex);
-            } else {
-                log.info("Event {} published to topic {} partition {} with offset {}",
-                        event.getClass().getSimpleName(),
-                        event.eventType(),
-                        result.getRecordMetadata().partition(),
-                        result.getRecordMetadata().offset());
-            }
-        });
+        log.info("Publishing event {} to topic {}", event.eventType(), topic);
+
+        try {
+            kafkaTemplate.send(topic, event).get(); // block to ACK
+        } catch (Exception ex) {
+            log.error(
+                    "Failed to publish event {} to topic {}",
+                    event.eventType(),
+                    topic,
+                    ex
+            );
+            throw InternalErrorException.with(
+                    "Failed to publish event %s to topic %s"
+                            .formatted(event.eventType(), topic)
+            );
+        }
     }
+
 }
