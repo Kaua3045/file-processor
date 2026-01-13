@@ -8,6 +8,14 @@ idempotency-key:
   storage:
     type: in-memory
 
+kafka:
+  topics:
+    events: file-processor-events.topic
+  auto-create-topics: true
+  bootstrap-servers: localhost:9092
+  pool-timeout: 1_000
+  auto-commit: false
+
 logging:
   level:
     ROOT: WARN
