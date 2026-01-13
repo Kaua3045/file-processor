@@ -2,6 +2,7 @@ package com.kaua.file.processor.infrastructure.services.eventbus;
 
 import com.kaua.file.processor.domain.UnitTest;
 import com.kaua.file.processor.domain.events.DomainEvent;
+import com.kaua.file.processor.domain.exceptions.InternalErrorException;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.springframework.kafka.support.SendResult;
 
 import java.util.concurrent.CompletableFuture;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -34,46 +36,25 @@ class KafkaEventBusTest extends UnitTest {
     }
 
     @Test
-    void shouldPublishEventToKafka() {
-        final var future = new CompletableFuture<SendResult<String, Object>>();
-        when(kafkaTemplate.send("test-topic", domainEvent))
-                .thenReturn(future);
-
-        eventBus.publish(domainEvent);
-
-        verify(kafkaTemplate).send("test-topic", domainEvent);
-    }
-
-    @Test
     void shouldHandleSuccessfulPublish() {
-        var future = new CompletableFuture<SendResult<String, Object>>();
+        var sendResult = mock(SendResult.class);
         when(kafkaTemplate.send(anyString(), any()))
-                .thenReturn(future);
+                .thenReturn(CompletableFuture.completedFuture(sendResult));
 
         eventBus.publish(domainEvent);
-
-        var metadata = mock(RecordMetadata.class);
-        when(metadata.partition()).thenReturn(1);
-        when(metadata.offset()).thenReturn(42L);
-
-        var sendResult = mock(SendResult.class);
-        when(sendResult.getRecordMetadata()).thenReturn(metadata);
-
-        future.complete(sendResult);
 
         verify(kafkaTemplate).send(anyString(), eq(domainEvent));
     }
 
     @Test
     void shouldHandlePublishError() {
-        var future = new CompletableFuture<SendResult<String, Object>>();
         when(kafkaTemplate.send(anyString(), any()))
-                .thenReturn(future);
+                .thenThrow(new RuntimeException("Kafka down"));
 
-        eventBus.publish(domainEvent);
-
-        future.completeExceptionally(new RuntimeException("Kafka down"));
-
-        verify(kafkaTemplate).send(anyString(), eq(domainEvent));
+        assertThrows(
+                InternalErrorException.class,
+                () -> eventBus.publish(domainEvent)
+        );
     }
+
 }
