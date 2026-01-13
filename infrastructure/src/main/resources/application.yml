@@ -1,5 +1,5 @@
 application:
-  eventbus: kafka # in-memory
+  eventbus: in-memory #kafka
   otel:
     memory-exporter: true
 
