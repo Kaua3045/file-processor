@@ -4,6 +4,8 @@ import com.kaua.file.processor.AbstractEmbeddedKafkaTest;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobCommand;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
+import com.kaua.file.processor.domain.exceptions.NotFoundException;
+import com.kaua.file.processor.domain.importjob.ImportJob;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +78,29 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
                 .untilAsserted(() ->
                         verify(processImportJobUseCase, atLeast(2))
                                 .execute(any())
+                );
+    }
+
+    @Test
+    void shouldNotFoundImportJobAndAck() throws Exception {
+        final var event = new ImportJobCreatedEvent(
+                UUID.randomUUID().toString(),
+                1L
+        );
+
+        final var payload = Json.writeValueAsString(event);
+
+        doThrow(NotFoundException.with(ImportJob.class, event.aggregateId()).get())
+                .when(processImportJobUseCase)
+                .execute(any());
+
+        kafkaTemplate.send(importJobProcessTopic, payload);
+
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() ->
+                        verify(processImportJobUseCase)
+                                .execute(ProcessImportJobCommand.with(event.aggregateId()))
                 );
     }
 }
