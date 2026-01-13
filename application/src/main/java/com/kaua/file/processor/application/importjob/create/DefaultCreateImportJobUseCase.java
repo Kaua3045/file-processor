@@ -5,9 +5,11 @@ import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
 import com.kaua.file.processor.application.wrapper.TracerWrapper;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
+import com.kaua.file.processor.domain.exceptions.DomainException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
 
 import java.util.Objects;
+import java.util.Set;
 
 public class DefaultCreateImportJobUseCase extends CreateImportJobUseCase {
 
@@ -32,6 +34,10 @@ public class DefaultCreateImportJobUseCase extends CreateImportJobUseCase {
                 (ctx) -> {
                     if (input == null) {
                         throw new UseCaseInputCannotBeNullException(CreateImportJobUseCase.class);
+                    }
+
+                    if (!isAllowedType(input.fileName())) {
+                        throw DomainException.with("File type not allowed: %s".formatted(input.fileName()));
                     }
 
                     final var aStoredFile = ctx.runInSpan("storeFile", () -> fileStorage.store(
@@ -71,5 +77,10 @@ public class DefaultCreateImportJobUseCase extends CreateImportJobUseCase {
                     );
                 }
         );
+    }
+
+    private boolean isAllowedType(final String fileName) {
+        final var aExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        return Set.of("csv", "ods", "xlsx").contains(aExtension);
     }
 }
