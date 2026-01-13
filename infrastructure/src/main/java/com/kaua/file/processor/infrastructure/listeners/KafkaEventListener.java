@@ -3,6 +3,7 @@ package com.kaua.file.processor.infrastructure.listeners;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobCommand;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
+import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,9 @@ public class KafkaEventListener {
             ));
             ack.acknowledge();
             log.info("Import job with id: {} processed successfully", aEvent.aggregateId());
+        } catch (NotFoundException e) {
+            log.warn("Import job with id: {} not found. Acknowledging message to avoid reprocessing.", aEvent.aggregateId());
+            ack.acknowledge();
         } catch (Exception ex) {
             log.error("Error processing import job with id: {}", aEvent.aggregateId(), ex);
             throw ex;
