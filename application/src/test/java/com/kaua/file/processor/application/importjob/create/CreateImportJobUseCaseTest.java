@@ -4,6 +4,7 @@ import com.kaua.file.processor.application.UseCaseTest;
 import com.kaua.file.processor.application.exceptions.UseCaseInputCannotBeNullException;
 import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
+import com.kaua.file.processor.domain.exceptions.DomainException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
 import com.kaua.file.processor.domain.importjob.StoredFile;
 import org.junit.jupiter.api.Assertions;
@@ -98,6 +99,25 @@ class CreateImportJobUseCaseTest extends UseCaseTest {
         Assertions.assertNotNull(actualOutput);
         Assertions.assertEquals(
                 "Input to CreateImportJobUseCase cannot be null",
+                actualOutput.getMessage()
+        );
+    }
+
+    @Test
+    void givenAnInvalidFileType_whenCallsCreateImportJobUseCase_executeShouldThrowException() {
+        final var expectedFileName = "file.txt";
+        final var expectedFileContent = mockInputStream();
+
+        final var aCommand = CreateImportJobCommand.with(expectedFileContent, expectedFileName);
+
+        final var actualOutput = Assertions.assertThrows(
+                DomainException.class,
+                () -> this.useCase.execute(aCommand)
+        );
+
+        Assertions.assertNotNull(actualOutput);
+        Assertions.assertEquals(
+                "File type not allowed: file.txt",
                 actualOutput.getMessage()
         );
     }
