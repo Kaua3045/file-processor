@@ -4,6 +4,8 @@ import com.kaua.file.processor.application.importjob.create.CreateImportJobUseCa
 import com.kaua.file.processor.application.importjob.create.DefaultCreateImportJobUseCase;
 import com.kaua.file.processor.application.importjob.process.DefaultProcessImportJobUseCase;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
+import com.kaua.file.processor.application.importjob.progress.DefaultGetImportJobProgressUseCase;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressUseCase;
 import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
 import com.kaua.file.processor.application.wrapper.TracerWrapper;
@@ -34,6 +36,17 @@ public class ImportJobUseCases {
         return new DefaultProcessImportJobUseCase(
                 importJobRepository,
                 fileStorageRepository
+        );
+    }
+
+    @Bean
+    public GetImportJobProgressUseCase getImportJobProgressUseCase(
+            final ImportJobRepository importJobRepository,
+            final TracerWrapper tracerWrapper
+    ) {
+        return new DefaultGetImportJobProgressUseCase(
+                importJobRepository,
+                tracerWrapper
         );
     }
 }

@@ -2,8 +2,11 @@ package com.kaua.file.processor.infrastructure.rest.controllers;
 
 import com.kaua.file.processor.application.importjob.create.CreateImportJobCommand;
 import com.kaua.file.processor.application.importjob.create.CreateImportJobUseCase;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressCommand;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressUseCase;
 import com.kaua.file.processor.domain.exceptions.InternalErrorException;
 import com.kaua.file.processor.infrastructure.importjob.res.CreateImportJobResponse;
+import com.kaua.file.processor.infrastructure.importjob.res.GetImportJobProgressResponse;
 import com.kaua.file.processor.infrastructure.rest.ImportJobAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +24,14 @@ public class ImportJobRestController implements ImportJobAPI {
     private static final Logger log = LoggerFactory.getLogger(ImportJobRestController.class);
 
     private final CreateImportJobUseCase createImportJobUseCase;
+    private final GetImportJobProgressUseCase getImportJobProgressUseCase;
 
     public ImportJobRestController(
-            final CreateImportJobUseCase createImportJobUseCase
+            final CreateImportJobUseCase createImportJobUseCase,
+            final GetImportJobProgressUseCase getImportJobProgressUseCase
     ) {
         this.createImportJobUseCase = Objects.requireNonNull(createImportJobUseCase);
+        this.getImportJobProgressUseCase = Objects.requireNonNull(getImportJobProgressUseCase);
     }
 
     @Override
@@ -50,5 +56,13 @@ public class ImportJobRestController implements ImportJobAPI {
         } catch (IOException e) {
             throw InternalErrorException.with("Error reading uploaded file");
         }
+    }
+
+    @Override
+    public ResponseEntity<GetImportJobProgressResponse> getImportJobStatus(final String importJobId) {
+        log.info("Received request to get progress for import job ID `{}`", importJobId);
+        final var aResponse = this.getImportJobProgressUseCase.execute(GetImportJobProgressCommand.with(importJobId));
+        log.info("Progress for import job ID `{}`: {}%", importJobId, aResponse.status());
+        return ResponseEntity.ok(GetImportJobProgressResponse.from(aResponse));
     }
 }
