@@ -6,6 +6,10 @@ import com.kaua.file.processor.ControllerTest;
 import com.kaua.file.processor.application.importjob.create.CreateImportJobCommand;
 import com.kaua.file.processor.application.importjob.create.CreateImportJobOutput;
 import com.kaua.file.processor.application.importjob.create.CreateImportJobUseCase;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressCommand;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressOutput;
+import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressUseCase;
+import com.kaua.file.processor.domain.importjob.ImportJob;
 import com.kaua.file.processor.domain.utils.ULID;
 import com.kaua.file.processor.infrastructure.idempotency.IdempotencyKey;
 import org.junit.jupiter.api.Assertions;
@@ -38,6 +42,9 @@ class ImportJobAPITest {
 
     @MockitoBean
     private CreateImportJobUseCase createImportJobUseCase;
+
+    @MockitoBean
+    private GetImportJobProgressUseCase getImportJobProgressUseCase;
 
     @Captor
     private ArgumentCaptor<CreateImportJobCommand> createImportJobCommandCaptor;
@@ -99,6 +106,36 @@ class ImportJobAPITest {
                 .andExpect(status().isInternalServerError());
 
         Mockito.verifyNoInteractions(createImportJobUseCase);
+    }
+
+    @Test
+    void givenAValidId_whenCallsGetImportJobProgress_shouldReturnImportJobProgress() throws Exception {
+        final var aImportJob = ImportJob.newImportJob(
+                "file-ref",
+                "file-hash"
+        );
+        aImportJob.start();
+
+        Mockito.when(getImportJobProgressUseCase.execute(GetImportJobProgressCommand.with(aImportJob.getId().value().toString())))
+                .thenReturn(GetImportJobProgressOutput.from(aImportJob));
+
+        final var aRequest = MockMvcRequestBuilders.get("/v1/import-jobs/{importJobId}", aImportJob.getId().value().toString())
+                .with(ApiTest.admin())
+                .accept(MediaType.APPLICATION_JSON);
+
+        final var aResponse = this.mvc.perform(aRequest);
+
+        aResponse
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.import_job_id").value(aImportJob.getId().value().toString()))
+                .andExpect(jsonPath("$.file_ref").value(aImportJob.getFileRef()))
+                .andExpect(jsonPath("$.file_hash").value(aImportJob.getFileHash()))
+                .andExpect(jsonPath("$.status").value(aImportJob.getStatus().name()))
+                .andExpect(jsonPath("$.processed_rows").value(aImportJob.getProcessedRows()));
+
+        Mockito.verify(getImportJobProgressUseCase, Mockito.times(1))
+                .execute(any());
     }
 
     private MockMultipartFile createMultipartFile() {
