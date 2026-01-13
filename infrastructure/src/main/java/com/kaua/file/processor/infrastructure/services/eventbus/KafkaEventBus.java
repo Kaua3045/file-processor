@@ -2,6 +2,7 @@ package com.kaua.file.processor.infrastructure.services.eventbus;
 
 import com.kaua.file.processor.domain.events.DomainEvent;
 import com.kaua.file.processor.domain.exceptions.InternalErrorException;
+import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,7 +29,7 @@ public class KafkaEventBus implements EventBus {
         log.info("Publishing event {} to topic {}", event.eventType(), topic);
 
         try {
-            kafkaTemplate.send(topic, event).get(); // block to ACK
+            kafkaTemplate.send(topic, Json.writeValueAsString(event)).get(); // block to ACK
         } catch (Exception ex) {
             log.error(
                     "Failed to publish event {} to topic {}",
