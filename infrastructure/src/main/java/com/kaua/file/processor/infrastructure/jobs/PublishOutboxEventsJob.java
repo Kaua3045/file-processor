@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
-@Profile("!test-integration")
+@Profile({"!test-integration", "!test-integration-kafka"})
 public class PublishOutboxEventsJob {
 
     private static final Logger log = LoggerFactory.getLogger(PublishOutboxEventsJob.class);
