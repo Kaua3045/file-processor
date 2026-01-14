@@ -27,13 +27,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-@EmbeddedKafka(partitions = 1, brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092"})
+//@EmbeddedKafka(partitions = 1, brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092"})
+@EmbeddedKafka(partitions = 1)
 @ActiveProfiles("test-integration-kafka")
 @SpringBootTest(
         classes = {WebServerConfig.class},
         properties = {"kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Tag("heavyIntegrationTest")
 public abstract class AbstractEmbeddedKafkaTest {
 
