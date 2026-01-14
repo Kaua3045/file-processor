@@ -1,6 +1,5 @@
 application:
-  eventbus:
-    in-memory: true
+  eventbus: in-memory #kafka
   otel:
     memory-exporter: true
 
@@ -15,6 +14,16 @@ kafka:
   bootstrap-servers: localhost:9092
   pool-timeout: 1_000
   auto-commit: false
+  consumers:
+    import-job-process:
+      auto-offset-reset: earliest
+      concurrency: 1
+      id: kafka-listener-import-job-process-${INSTANCE_ID:1}
+      topics:
+        - file-processor-events.topic
+      group-id: import-job-process-group
+      max-attempts: 4
+      auto-create-topics: false
 
 logging:
   level:
