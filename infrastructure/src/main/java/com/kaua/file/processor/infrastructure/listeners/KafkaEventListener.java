@@ -5,6 +5,7 @@ import com.kaua.file.processor.application.importjob.process.ProcessImportJobUse
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
+import com.kaua.file.processor.infrastructure.processedEvents.ProcessedEventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -20,9 +21,14 @@ public class KafkaEventListener {
     private static final Logger log = LoggerFactory.getLogger(KafkaEventListener.class);
 
     private final ProcessImportJobUseCase processImportJobUseCase;
+    private final ProcessedEventRepository processedEventRepository;
 
-    public KafkaEventListener(final ProcessImportJobUseCase processImportJobUseCase) {
+    public KafkaEventListener(
+            final ProcessImportJobUseCase processImportJobUseCase,
+            final ProcessedEventRepository processedEventRepository
+    ) {
         this.processImportJobUseCase = Objects.requireNonNull(processImportJobUseCase);
+        this.processedEventRepository = Objects.requireNonNull(processedEventRepository);
     }
 
     @KafkaListener(
@@ -42,13 +48,18 @@ public class KafkaEventListener {
         // TODO in future handle different types of events
         final var aEvent = Json.readValue(message, ImportJobCreatedEvent.class);
 
-        // TODO check if the event has already been processed
+        if (this.processedEventRepository.existsById(aEvent.eventId())) {
+            log.warn("Event with id: {} has already been processed. Acknowledging message to avoid reprocessing.", aEvent.eventId());
+            ack.acknowledge();
+            return;
+        }
 
         try {
             log.info("Processing import job with id: {}", aEvent.aggregateId());
             this.processImportJobUseCase.execute(ProcessImportJobCommand.with(
                     aEvent.aggregateId()
             ));
+            this.processedEventRepository.save(aEvent.eventId());
             ack.acknowledge();
             log.info("Import job with id: {} processed successfully", aEvent.aggregateId());
         } catch (NotFoundException e) {
