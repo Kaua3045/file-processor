@@ -33,7 +33,6 @@ public class KafkaEventListener {
             },
             groupId = "${kafka.consumers.import-job-process.group-id}",
             // generate a random id for the consumer
-            id = "${kafka.consumers.import-job-process.id}-#{T(java.util.UUID).randomUUID().toString()}",
             properties = {
                     "auto.offset.reset=${kafka.consumers.import-job-process.auto-offset-reset}"
             }
