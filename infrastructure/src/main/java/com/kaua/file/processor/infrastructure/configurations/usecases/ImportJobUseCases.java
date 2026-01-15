@@ -8,6 +8,7 @@ import com.kaua.file.processor.application.importjob.progress.DefaultGetImportJo
 import com.kaua.file.processor.application.importjob.progress.GetImportJobProgressUseCase;
 import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
+import com.kaua.file.processor.application.wrapper.Metrics;
 import com.kaua.file.processor.application.wrapper.TracerWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +32,13 @@ public class ImportJobUseCases {
     @Bean
     public ProcessImportJobUseCase processImportJobUseCase(
             final ImportJobRepository importJobRepository,
-            final FileStorageRepository fileStorageRepository
+            final FileStorageRepository fileStorageRepository,
+            final Metrics metrics
     ) {
         return new DefaultProcessImportJobUseCase(
                 importJobRepository,
-                fileStorageRepository
+                fileStorageRepository,
+                metrics
         );
     }
 

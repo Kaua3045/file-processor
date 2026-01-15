@@ -2,6 +2,7 @@ package com.kaua.file.processor.infrastructure.listeners;
 
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobCommand;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
+import com.kaua.file.processor.application.wrapper.Metrics;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
@@ -22,13 +23,16 @@ public class KafkaEventListener {
 
     private final ProcessImportJobUseCase processImportJobUseCase;
     private final ProcessedEventRepository processedEventRepository;
+    private final Metrics metrics;
 
     public KafkaEventListener(
             final ProcessImportJobUseCase processImportJobUseCase,
-            final ProcessedEventRepository processedEventRepository
+            final ProcessedEventRepository processedEventRepository,
+            final Metrics metrics
     ) {
         this.processImportJobUseCase = Objects.requireNonNull(processImportJobUseCase);
         this.processedEventRepository = Objects.requireNonNull(processedEventRepository);
+        this.metrics = Objects.requireNonNull(metrics);
     }
 
     @KafkaListener(
@@ -45,12 +49,17 @@ public class KafkaEventListener {
     )
     public void onMessage(@Payload final String message, Acknowledgment ack) {
         log.info("Received message: {}", message);
+        final var aStart = System.currentTimeMillis();
+        this.metrics.incrementCounter("kafka_event_received", 1);
+
         // TODO in future handle different types of events
         final var aEvent = Json.readValue(message, ImportJobCreatedEvent.class);
 
         if (this.processedEventRepository.existsById(aEvent.eventId())) {
             log.warn("Event with id: {} has already been processed. Acknowledging message to avoid reprocessing.", aEvent.eventId());
+            this.metrics.incrementCounter("kafka_event_duplicated", 1);
             ack.acknowledge();
+            this.metrics.incrementCounter("kafka_event_acked", 1);
             return;
         }
 
@@ -61,13 +70,25 @@ public class KafkaEventListener {
             ));
             this.processedEventRepository.save(aEvent.eventId());
             ack.acknowledge();
+
+            this.metrics.incrementCounter("kafka_event_processed", 1);
+            this.metrics.incrementCounter("kafka_event_acked", 1);
+
             log.info("Import job with id: {} processed successfully", aEvent.aggregateId());
         } catch (NotFoundException e) {
             log.warn("Import job with id: {} not found. Acknowledging message to avoid reprocessing.", aEvent.aggregateId());
+
+            this.metrics.incrementCounter("kafka_event_not_found", 1);
+
             ack.acknowledge();
+
+            this.metrics.incrementCounter("kafka_event_acked", 1);
         } catch (Exception ex) {
             log.error("Error processing import job with id: {}", aEvent.aggregateId(), ex);
+            this.metrics.incrementCounter("kafka_event_failed", 1);
             throw ex;
+        } finally {
+            this.metrics.recordTime("kafka_processing_time_ms", System.currentTimeMillis() - aStart);
         }
     }
 }
