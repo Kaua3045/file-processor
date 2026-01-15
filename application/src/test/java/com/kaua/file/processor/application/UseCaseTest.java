@@ -1,5 +1,6 @@
 package com.kaua.file.processor.application;
 
+import com.kaua.file.processor.application.wrapper.Metrics;
 import com.kaua.file.processor.application.wrapper.ObservationContext;
 import com.kaua.file.processor.application.wrapper.TracerWrapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,9 @@ public abstract class UseCaseTest {
 
     @Mock
     protected TracerWrapper tracerWrapper;
+
+    @Mock
+    protected Metrics metrics;
 
     @BeforeEach
     void setupTracerWrapper() {
