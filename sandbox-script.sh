@@ -22,7 +22,7 @@ up() {
   sleep 5
 
   echo "🧩 Starting application..."
-  docker compose -f $APP_COMPOSE up
+  docker compose -f $APP_COMPOSE up -d
 }
 
 down() {
