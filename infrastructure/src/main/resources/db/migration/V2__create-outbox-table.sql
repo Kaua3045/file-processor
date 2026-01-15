@@ -8,3 +8,6 @@ CREATE TABLE outbox (
     occurred_on TIMESTAMP WITH TIME ZONE NOT NULL,
     event_class VARCHAR(255) NOT NULL
 );
+
+CREATE INDEX outbox_status ON outbox (status);
+CREATE INDEX outbox_occurred_on ON outbox(occurred_on);
