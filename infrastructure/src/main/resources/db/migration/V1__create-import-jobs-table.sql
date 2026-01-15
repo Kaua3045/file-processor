@@ -9,3 +9,5 @@ CREATE TABLE import_jobs (
     deleted_at TIMESTAMP WITH TIME ZONE,
     processed_rows BIGINT
 );
+
+CREATE INDEX file_hash_index ON import_jobs (file_hash);
