@@ -3,6 +3,7 @@ package com.kaua.file.processor.application.importjob.process;
 import com.kaua.file.processor.application.exceptions.UseCaseInputCannotBeNullException;
 import com.kaua.file.processor.application.repository.FileStorageRepository;
 import com.kaua.file.processor.application.repository.ImportJobRepository;
+import com.kaua.file.processor.application.wrapper.Metrics;
 import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
 
@@ -19,13 +20,16 @@ public class DefaultProcessImportJobUseCase extends ProcessImportJobUseCase {
 
     private final ImportJobRepository importJobRepository;
     private final FileStorageRepository fileStorageRepository;
+    private final Metrics metrics;
 
     public DefaultProcessImportJobUseCase(
             final ImportJobRepository importJobRepository,
-            final FileStorageRepository fileStorageRepository
+            final FileStorageRepository fileStorageRepository,
+            final Metrics metrics
     ) {
         this.importJobRepository = Objects.requireNonNull(importJobRepository);
         this.fileStorageRepository = Objects.requireNonNull(fileStorageRepository);
+        this.metrics = Objects.requireNonNull(metrics);
     }
 
     @Override
@@ -33,6 +37,9 @@ public class DefaultProcessImportJobUseCase extends ProcessImportJobUseCase {
         if (input == null) {
             throw new UseCaseInputCannotBeNullException(ProcessImportJobUseCase.class);
         }
+
+        long aStart = System.currentTimeMillis();
+        this.metrics.incrementCounter("import_job_process_started", 1);
 
         final var aImportJob = this.importJobRepository.importJobOfId(input.importJobId())
                 .orElseThrow(NotFoundException.with(ImportJob.class, input.importJobId()));
@@ -62,9 +69,14 @@ public class DefaultProcessImportJobUseCase extends ProcessImportJobUseCase {
             aImportJob.complete();
             this.importJobRepository.save(aImportJob);
 
+            metrics.incrementCounter("import_job_process_completed", 1);
         } catch (final Exception ex) {
             aImportJob.fail();
             this.importJobRepository.save(aImportJob);
+            metrics.incrementCounter("import_job_process_failed", 1);
+        } finally {
+            long aEnd = System.currentTimeMillis();
+            this.metrics.recordTime("import_job_process_time_ms", aEnd - aStart);
         }
     }
 
@@ -72,5 +84,6 @@ public class DefaultProcessImportJobUseCase extends ProcessImportJobUseCase {
         // Simulate processing each line
         aImportJob.incrementProcessed(lines.size());
         this.importJobRepository.save(aImportJob);
+        metrics.incrementCounter("import_job_lines_processed", lines.size());
     }
 }
