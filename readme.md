@@ -73,10 +73,14 @@ cd java-template-modules
 1. Configure o .env como no passo anterior.
 2. Rode os containers:
 ```bash
-  docker-compose -f docker/sandbox/observability/docker-compose.yml up -d
-  docker-compose -f docker-compose-dev.yml up -d
+  chmod -x sandbox-script.sh
+  ./sandbox-script.sh up
 ```
 - URL base: http://localhost:8081/api/
+- `./sandbox-script.sh up` Inicializa as apps
+- `./sandbox-script.sh down` Para as apps
+- `./sandbox-script.sh restart` Reinicializa as apps
+- `./sandbox-script.sh clean` Desliga as apps e limpa todos os volumes
 
 ## Contribuindo com o projeto
 
