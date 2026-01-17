@@ -62,6 +62,8 @@ dependencies {
 
     implementation 'org.owasp.encoder:encoder:1.2.3'
 
+    implementation 'software.amazon.awssdk:s3:2.41.9'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
