@@ -1,5 +1,11 @@
+aws:
+  region: us-east-1
+  s3:
+    bucket: file-processor-prod
+
 application:
   eventbus: in-memory #kafka
+  filestorage: local
   otel:
     memory-exporter: true
 
