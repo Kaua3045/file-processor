@@ -21,7 +21,7 @@ public class EventBusConfig {
 
     @Bean
     @ConditionalOnProperty(name = "application.eventbus", havingValue = "kafka")
-    public EventBus kafkaEventBus(final KafkaTemplate<String, Object> kafkaTemplate, @Value("${kafka.topics.events}") final String topic) {
+    public EventBus kafkaEventBus(final KafkaTemplate<String, byte[]> kafkaTemplate, @Value("${kafka.topics.events}") final String topic) {
         return new KafkaEventBus(kafkaTemplate, topic);
     }
 }

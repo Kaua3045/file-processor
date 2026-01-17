@@ -11,6 +11,7 @@ import com.kaua.file.processor.infrastructure.jdbc.DatabaseClient;
 import com.kaua.file.processor.infrastructure.jdbc.JdbcUtils;
 import com.kaua.file.processor.infrastructure.jdbc.RowMap;
 import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
+import com.kaua.file.processor.infrastructure.outbox.OutboxPayloadType;
 import com.kaua.file.processor.infrastructure.outbox.OutboxRepository;
 import com.kaua.file.processor.infrastructure.outbox.OutboxStatus;
 import org.slf4j.Logger;
@@ -53,9 +54,9 @@ public class ImportJobJdbcRepository implements ImportJobRepository {
                             it.eventType(),
                             it.aggregateVersion(),
                             OutboxStatus.PENDING,
-                            Json.writeValueAsString(it),
+                            Json.writeValueAsBytes(it),
                             it.occurredOn(),
-                            it.getClass().getCanonicalName()
+                            OutboxPayloadType.JSON
                     ))
             );
             log.info("Import job with id `{}` inserted successfully", importJob.getId());

@@ -33,9 +33,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.eventType(),
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
-                Json.writeValueAsString(aDomainEvent),
+                Json.writeValueAsBytes(aDomainEvent),
                 aDomainEvent.occurredOn(),
-                aDomainEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
 
         final var savedOutboxEntity = this.outboxRepository().save(aOutboxEntity);
@@ -49,7 +49,7 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(aOutboxEntity.status(), savedOutboxEntity.status());
         Assertions.assertEquals(aOutboxEntity.payload(), savedOutboxEntity.payload());
         Assertions.assertEquals(aOutboxEntity.occurredOn(), savedOutboxEntity.occurredOn());
-        Assertions.assertEquals(aOutboxEntity.eventClass(), savedOutboxEntity.eventClass());
+        Assertions.assertEquals(aOutboxEntity.payloadType(), savedOutboxEntity.payloadType());
     }
 
     @Test
@@ -67,9 +67,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.eventType(),
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
-                Json.writeValueAsString(aDomainEvent),
+                Json.writeValueAsBytes(aDomainEvent),
                 aDomainEvent.occurredOn(),
-                aDomainEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
 
         this.outboxRepository().save(aOutboxEntity);
@@ -80,9 +80,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.eventType(),
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.FAILED,
-                Json.writeValueAsString(aDomainEvent),
+                Json.writeValueAsBytes(aDomainEvent),
                 aDomainEvent.occurredOn(),
-                aDomainEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
 
         this.outboxRepository().save(aOutboxEntityFailed);
@@ -99,9 +99,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
         Assertions.assertEquals(aOutboxEntity.eventType(), retrievedOutboxEntity.eventType());
         Assertions.assertEquals(aOutboxEntity.version(), retrievedOutboxEntity.version());
         Assertions.assertEquals(aOutboxEntity.status(), retrievedOutboxEntity.status());
-        Assertions.assertEquals(aOutboxEntity.payload(), retrievedOutboxEntity.payload());
+        Assertions.assertArrayEquals(aOutboxEntity.payload(), retrievedOutboxEntity.payload());
         Assertions.assertEquals(aOutboxEntity.occurredOn(), retrievedOutboxEntity.occurredOn());
-        Assertions.assertEquals(aOutboxEntity.eventClass(), retrievedOutboxEntity.eventClass());
+        Assertions.assertEquals(aOutboxEntity.payloadType(), retrievedOutboxEntity.payloadType());
     }
 
     @Test
@@ -119,9 +119,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.eventType(),
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
-                Json.writeValueAsString(aDomainEvent),
+                Json.writeValueAsBytes(aDomainEvent),
                 aDomainEvent.occurredOn(),
-                aDomainEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
 
         this.outboxRepository().save(aOutboxEntity);
@@ -148,9 +148,9 @@ class OutboxJdbcRepositoryTest extends AbstractRepositoryTest {
                 aDomainEvent.eventType(),
                 aDomainEvent.aggregateVersion(),
                 OutboxStatus.PENDING,
-                Json.writeValueAsString(aDomainEvent),
+                Json.writeValueAsBytes(aDomainEvent),
                 aDomainEvent.occurredOn(),
-                aDomainEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
 
         this.outboxRepository().save(aOutboxEntity);

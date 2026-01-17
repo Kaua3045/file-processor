@@ -7,6 +7,7 @@ import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import com.kaua.file.processor.infrastructure.processedEvents.ProcessedEventRepository;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,6 +16,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class KafkaEventListener {
@@ -47,21 +50,23 @@ public class KafkaEventListener {
                     "auto.offset.reset=${kafka.consumers.import-job-process.auto-offset-reset}"
             }
     )
-    public void onMessage(@Payload final String message, Acknowledgment ack) {
+    public void onMessage(@Payload final ConsumerRecord<String, byte[]> message, Acknowledgment ack) {
         log.info("Received message: {}", message);
         final var aStart = System.currentTimeMillis();
         this.metrics.incrementCounter("kafka_event_received", 1);
 
-        // TODO in future handle different types of events
-        final var aEvent = Json.readValue(message, ImportJobCreatedEvent.class);
+        final var aEventId = header(message, "event_id");
 
-        if (this.processedEventRepository.existsById(aEvent.eventId())) {
-            log.warn("Event with id: {} has already been processed. Acknowledging message to avoid reprocessing.", aEvent.eventId());
+        if (this.processedEventRepository.existsById(aEventId)) {
+            log.warn("Event with id: {} has already been processed. Acknowledging message to avoid reprocessing.", aEventId);
             this.metrics.incrementCounter("kafka_event_duplicated", 1);
             ack.acknowledge();
             this.metrics.incrementCounter("kafka_event_acked", 1);
             return;
         }
+
+        // TODO in future handle different types of events
+        final var aEvent = Json.readValue(message.value(), ImportJobCreatedEvent.class);
 
         try {
             log.info("Processing import job with id: {}", aEvent.aggregateId());
@@ -90,5 +95,9 @@ public class KafkaEventListener {
         } finally {
             this.metrics.recordTime("kafka_processing_time_ms", System.currentTimeMillis() - aStart);
         }
+    }
+
+    private static String header(ConsumerRecord<?, ?> r, String key) {
+        return new String(r.headers().lastHeader(key).value(), UTF_8);
     }
 }

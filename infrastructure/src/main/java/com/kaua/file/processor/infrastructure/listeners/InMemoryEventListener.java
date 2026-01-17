@@ -2,8 +2,9 @@ package com.kaua.file.processor.infrastructure.listeners;
 
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobCommand;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
-import com.kaua.file.processor.domain.events.DomainEvent;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
+import com.kaua.file.processor.infrastructure.configurations.json.Json;
+import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,11 +28,12 @@ public class InMemoryEventListener {
     }
 
     @EventListener
-    public void handleEvents(DomainEvent aDomainEvent) {
-        log.info("DomainEvent received: {}", aDomainEvent);
-        switch (aDomainEvent.eventType()) {
-            case "ImportJobCreated" -> this.handleImportJobCreatedEvent((ImportJobCreatedEvent) aDomainEvent);
-            default -> throw new IllegalArgumentException("Event type not recognized: " + aDomainEvent.eventType());
+    public void handleEvents(OutboxEntity outboxEntity) {
+        log.info("DomainEvent received: {}", outboxEntity);
+        switch (outboxEntity.eventType()) {
+            case "ImportJobCreated" ->
+                    this.handleImportJobCreatedEvent(Json.readValue(outboxEntity.payload(), ImportJobCreatedEvent.class));
+            default -> throw new IllegalArgumentException("Event type not recognized: " + outboxEntity.eventType());
         }
     }
 

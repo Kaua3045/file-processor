@@ -4,7 +4,11 @@ import com.kaua.file.processor.application.importjob.process.ProcessImportJobUse
 import com.kaua.file.processor.domain.UnitTest;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.utils.IdentifierUtils;
+import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import com.kaua.file.processor.infrastructure.jobs.FakeDomainEvent;
+import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
+import com.kaua.file.processor.infrastructure.outbox.OutboxPayloadType;
+import com.kaua.file.processor.infrastructure.outbox.OutboxStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,8 +39,18 @@ class InMemoryEventListenerTest extends UnitTest {
                 IdentifierUtils.generateNewULID().toString(),
                 1L
         );
+        final var aOutboxEntity = new OutboxEntity(
+                event.eventId(),
+                event.aggregateId(),
+                event.eventType(),
+                event.aggregateVersion(),
+                OutboxStatus.COMPLETED,
+                Json.writeValueAsBytes(event),
+                event.occurredOn(),
+                OutboxPayloadType.JSON
+        );
 
-        listener.handleEvents(event);
+        listener.handleEvents(aOutboxEntity);
 
         verify(processImportJobUseCase, times(1))
                 .execute(any());
@@ -49,6 +63,17 @@ class InMemoryEventListenerTest extends UnitTest {
                 1L
         );
 
-        assertThrows(IllegalArgumentException.class, () -> listener.handleEvents(event));
+        final var aOutboxEntity = new OutboxEntity(
+                event.eventId(),
+                event.aggregateId(),
+                event.eventType(),
+                event.aggregateVersion(),
+                OutboxStatus.COMPLETED,
+                Json.writeValueAsBytes(event),
+                event.occurredOn(),
+                OutboxPayloadType.JSON
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> listener.handleEvents(aOutboxEntity));
     }
 }
