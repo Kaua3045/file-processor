@@ -1,8 +1,8 @@
 package com.kaua.file.processor.infrastructure.services.eventbus;
 
-import com.kaua.file.processor.domain.events.DomainEvent;
+import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
 
 public interface EventBus {
 
-    void publish(DomainEvent event);
+    void publish(OutboxEntity outbox);
 }

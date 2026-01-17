@@ -8,8 +8,8 @@ public record OutboxEntity(
         String eventType,
         long version,
         OutboxStatus status,
-        String payload,
+        byte[] payload,
         Instant occurredOn,
-        String eventClass
+        OutboxPayloadType payloadType
 ) {
 }

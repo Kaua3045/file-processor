@@ -2,11 +2,13 @@ package com.kaua.file.processor.infrastructure.listeners;
 
 import com.kaua.file.processor.AbstractEmbeddedKafkaTest;
 import com.kaua.file.processor.application.importjob.process.ProcessImportJobUseCase;
+import com.kaua.file.processor.domain.events.DomainEvent;
 import com.kaua.file.processor.domain.events.ImportJobCreatedEvent;
 import com.kaua.file.processor.domain.exceptions.NotFoundException;
 import com.kaua.file.processor.domain.importjob.ImportJob;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import com.kaua.file.processor.infrastructure.processedEvents.ProcessedEventRepository;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +35,7 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
     private ProcessedEventRepository processedEventRepository;
 
     @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private KafkaTemplate<String, byte[]> kafkaTemplate;
 
     @Value("${kafka.consumers.import-job-process.topics.[0]}")
     private String importJobProcessTopic;
@@ -55,10 +58,7 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
         }).when(processImportJobUseCase).execute(any());
         Mockito.doNothing().when(processedEventRepository).save(event.eventId());
 
-        kafkaTemplate.send(
-                importJobProcessTopic,
-                Json.writeValueAsString(event)
-        );
+        kafkaTemplate.send(createProducerRecord(event));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
@@ -90,10 +90,7 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
         }).when(processImportJobUseCase).execute(any());
         Mockito.doNothing().when(processedEventRepository).save(event.eventId());
 
-        kafkaTemplate.send(
-                importJobProcessTopic,
-                Json.writeValueAsString(event)
-        );
+        kafkaTemplate.send(createProducerRecord(event));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
@@ -123,10 +120,7 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
             throw NotFoundException.with(ImportJob.class, event.aggregateId()).get();
         }).when(processImportJobUseCase).execute(any());
 
-        kafkaTemplate.send(
-                importJobProcessTopic,
-                Json.writeValueAsString(event)
-        );
+        kafkaTemplate.send(createProducerRecord(event));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
@@ -154,10 +148,7 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
             return true;
         }).when(processedEventRepository).existsById(event.eventId());
 
-        kafkaTemplate.send(
-                importJobProcessTopic,
-                Json.writeValueAsString(event)
-        );
+        kafkaTemplate.send(createProducerRecord(event));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
@@ -167,5 +158,21 @@ class KafkaEventListenerTest extends AbstractEmbeddedKafkaTest {
                 .execute(any());
         Mockito.verify(processedEventRepository, times(0))
                 .save(event.eventId());
+    }
+
+    private ProducerRecord<String, byte[]> createProducerRecord(DomainEvent aEvent) {
+        final var aRecord = new ProducerRecord<String, byte[]>(
+                importJobProcessTopic,
+                null,
+                Json.writeValueAsBytes(aEvent)
+        );
+
+        aRecord.headers()
+                .add("event_type", aEvent.eventType().getBytes(StandardCharsets.UTF_8))
+                .add("payload_type", "json".getBytes(StandardCharsets.UTF_8))
+                .add("event_version", String.valueOf(aEvent.aggregateVersion()).getBytes(StandardCharsets.UTF_8))
+                .add("event_id", aEvent.eventId().getBytes(StandardCharsets.UTF_8));
+
+        return aRecord;
     }
 }

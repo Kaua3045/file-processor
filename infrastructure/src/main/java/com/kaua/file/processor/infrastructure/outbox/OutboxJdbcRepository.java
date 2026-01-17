@@ -33,8 +33,8 @@ public class OutboxJdbcRepository implements OutboxRepository {
         );
 
         final var aSql = """
-                INSERT INTO outbox (id, aggregate_id, event_type, version, status, payload, occurred_on, event_class)
-                VALUES (:id, :aggregateId, :eventType, :version, :status, :payload, :occurredOn, :eventClass)
+                INSERT INTO outbox (id, aggregate_id, event_type, version, status, payload, occurred_on, payload_type)
+                VALUES (:id, :aggregateId, :eventType, :version, :status, :payload, :occurredOn, :payloadType)
                 """;
 
         final var aParams = new HashMap<String, Object>();
@@ -45,7 +45,7 @@ public class OutboxJdbcRepository implements OutboxRepository {
         aParams.put("status", entity.status().name());
         aParams.put("payload", entity.payload());
         aParams.put("occurredOn", entity.occurredOn());
-        aParams.put("eventClass", entity.eventClass());
+        aParams.put("payloadType", entity.payloadType().name());
 
         this.databaseClient.update(aSql, aParams);
 
@@ -71,7 +71,7 @@ public class OutboxJdbcRepository implements OutboxRepository {
                 OutboxStatus.COMPLETED,
                 entity.payload(),
                 entity.occurredOn(),
-                entity.eventClass()
+                entity.payloadType()
         );
 
         final var aParams = new HashMap<String, Object>();
@@ -99,7 +99,7 @@ public class OutboxJdbcRepository implements OutboxRepository {
                 OutboxStatus.FAILED,
                 entity.payload(),
                 entity.occurredOn(),
-                entity.eventClass()
+                entity.payloadType()
         );
 
         final var aParams = new HashMap<String, Object>();
@@ -134,9 +134,9 @@ public class OutboxJdbcRepository implements OutboxRepository {
                 rs.getString("event_type"),
                 rs.getInt("version"),
                 OutboxStatus.valueOf(rs.getString("status")),
-                rs.getString("payload"),
+                rs.getBytes("payload"),
                 JdbcUtils.getInstant(rs, "occurred_on"),
-                rs.getString("event_class")
+                OutboxPayloadType.valueOf(rs.getString("payload_type"))
         );
     }
 }

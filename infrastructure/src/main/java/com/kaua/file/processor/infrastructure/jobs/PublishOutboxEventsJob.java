@@ -40,8 +40,7 @@ public class PublishOutboxEventsJob {
 
         aEvents.forEach(event -> {
             try {
-                final var aDomainEvent = (DomainEvent) Json.readTree(event.payload(), Class.forName(event.eventClass()));
-                eventBus.publish(aDomainEvent);
+                eventBus.publish(event);
                 outboxRepository.markAsCompleted(event);
                 log.info("Successfully published event with id {}", event.eventId());
             } catch (final Exception e) {

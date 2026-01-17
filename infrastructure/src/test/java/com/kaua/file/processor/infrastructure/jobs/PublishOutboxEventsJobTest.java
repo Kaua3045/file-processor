@@ -4,6 +4,7 @@ import com.kaua.file.processor.domain.UnitTest;
 import com.kaua.file.processor.domain.utils.IdentifierUtils;
 import com.kaua.file.processor.infrastructure.configurations.json.Json;
 import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
+import com.kaua.file.processor.infrastructure.outbox.OutboxPayloadType;
 import com.kaua.file.processor.infrastructure.outbox.OutboxRepository;
 import com.kaua.file.processor.infrastructure.outbox.OutboxStatus;
 import com.kaua.file.processor.infrastructure.services.eventbus.EventBus;
@@ -88,9 +89,9 @@ class PublishOutboxEventsJobTest extends UnitTest {
                 aEvent.eventType(),
                 aEvent.aggregateVersion(),
                 outboxStatus,
-                Json.writeValueAsString(aEvent),
+                Json.writeValueAsBytes(aEvent),
                 aEvent.occurredOn(),
-                aEvent.getClass().getCanonicalName()
+                OutboxPayloadType.JSON
         );
     }
 }

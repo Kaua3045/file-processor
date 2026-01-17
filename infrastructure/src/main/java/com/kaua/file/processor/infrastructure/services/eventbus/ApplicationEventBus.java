@@ -1,6 +1,6 @@
 package com.kaua.file.processor.infrastructure.services.eventbus;
 
-import com.kaua.file.processor.domain.events.DomainEvent;
+import com.kaua.file.processor.infrastructure.outbox.OutboxEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -18,9 +18,9 @@ public class ApplicationEventBus implements EventBus {
     }
 
     @Override
-    public void publish(final DomainEvent event) {
-        log.info("Publishing event to the application context: {}", event);
-        this.applicationContext.publishEvent(event);
-        log.info("Event published to the application context: {}", event);
+    public void publish(final OutboxEntity outbox) {
+        log.info("Publishing event to the application context: {}", outbox);
+        this.applicationContext.publishEvent(outbox);
+        log.info("Event published to the application context: {}", outbox);
     }
 }
