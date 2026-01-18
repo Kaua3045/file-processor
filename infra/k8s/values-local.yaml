@@ -1,0 +1,26 @@
+app:
+  image:
+    repository: file-processor
+    tag: local
+    pullPolicy: Always
+
+  env:
+    DEPLOYMENT_ENVIRONMENT_NAME: prod
+    SPRING_PROFILES_ACTIVE: prod
+
+  externalSecret:
+    dataFromKey: local/file-processor
+
+  kafka:
+    securityProtocol: PLAINTEXT
+
+  secretStore:
+    endpoint: http://localstack:4566
+    region: us-east-1
+    auth:
+      type: secretRef
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: file-processor.local
