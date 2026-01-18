@@ -1,0 +1,73 @@
+app:
+  name: file-processor
+  namespace: app
+  image:
+    repository: file-processor
+    tag: latest
+    pullPolicy: Always
+
+  replicas: 1
+  ports:
+    containerPort: 8081
+    servicePort: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8081
+
+  env:
+    DEPLOYMENT_ENVIRONMENT_NAME: prod
+    SPRING_PROFILES_ACTIVE: prod
+
+  securityContext:
+    type: RuntimeDefault
+
+  externalSecret:
+    enabled: true
+    name: file-processor
+    secretStoreName: aws-secrets
+    secretName: file-processor-secret
+    refreshInterval: 1h
+    dataFromKey: file-processor
+
+  secretStore:
+    name: aws-secrets
+    region: us-east-1
+    endpoint: "" # used only in local
+    auth:
+      type: jwt # jwt | secretRef
+      secretRefName: aws-creds
+
+  kafka:
+    enabled: true
+    securityProtocol: ""
+    saslMechanism: ""
+
+  redis:
+    port: "6379"
+
+  database:
+    port: "5432"
+    name: "file-processor-database"
+
+  serviceAccount:
+    create: true
+    name: file-processor-sa
+    annotations: {}
+
+  ingress:
+    enabled: true
+    className: ""
+    annotations: {}
+    path: /
+    pathType: Prefix
+    host: ""
