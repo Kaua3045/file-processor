@@ -1,0 +1,35 @@
+app:
+  image:
+    repository: file-processor
+    tag: "1.0.0"
+    pullPolicy: Always
+
+  env:
+    DEPLOYMENT_ENVIRONMENT_NAME: prod
+    SPRING_PROFILES_ACTIVE: prod
+
+  externalSecret:
+    dataFromKey: prod/file-processor
+
+  kafka:
+    securityProtocol: SASL_SSL
+    saslMechanism: AWS_MSK_IAM
+
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/app
+
+  secretStore:
+    region: us-east-1
+    auth:
+      type: jwt
+
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+    host: api.mydomain.com
