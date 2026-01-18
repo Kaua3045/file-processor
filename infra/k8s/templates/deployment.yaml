@@ -15,6 +15,9 @@ spec:
     spec:
       serviceAccountName: {{ .Values.app.serviceAccount.name }}
       terminationGracePeriodSeconds: 40
+      securityContext:
+        seccompProfile:
+          type: {{ .Values.app.securityContext.type }}
 
       containers:
         - name: {{ .Values.app.name }}
