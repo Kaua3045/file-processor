@@ -28,6 +28,9 @@ app:
     DEPLOYMENT_ENVIRONMENT_NAME: prod
     SPRING_PROFILES_ACTIVE: prod
 
+  securityContext:
+    type: RuntimeDefault
+
   externalSecret:
     enabled: true
     name: file-processor
