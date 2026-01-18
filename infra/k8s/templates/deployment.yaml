@@ -16,6 +16,10 @@ spec:
       serviceAccountName: {{ .Values.app.serviceAccount.name }}
       terminationGracePeriodSeconds: 40
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
         seccompProfile:
           type: {{ .Values.app.securityContext.type }}
 
@@ -23,6 +27,12 @@ spec:
         - name: {{ .Values.app.name }}
           image: {{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}
           imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
 
           envFrom:
             - secretRef:
