@@ -1,6 +1,6 @@
 app:
   image:
-    repository: file-processor
+    repository: kauapereira/file-processor
     tag: "1.0.0"
     pullPolicy: Always
 
@@ -17,7 +17,7 @@ app:
 
   serviceAccount:
     annotations:
-      eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/app
+      eks.amazonaws.com/role-arn: arn:aws:iam::518216637660:role/file-processor-irsa
 
   secretStore:
     region: us-east-1
@@ -31,5 +31,5 @@ app:
       kubernetes.io/ingress.class: alb
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/backend-protocol: HTTP
-    host: api.mydomain.com
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+#    host: api.mydomain.com
