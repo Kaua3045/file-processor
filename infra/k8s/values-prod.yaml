@@ -9,7 +9,8 @@ app:
     SPRING_PROFILES_ACTIVE: prod
 
   externalSecret:
-    dataFromKey: prod/file-processor
+    dataFromKey: dev/file-processor
+#    dataFromKey: prod/file-processor
 
   kafka:
     securityProtocol: SASL_SSL
@@ -17,12 +18,13 @@ app:
 
   serviceAccount:
     annotations:
-      eks.amazonaws.com/role-arn: arn:aws:iam::518216637660:role/file-processor-irsa
+      eks.amazonaws.com/role-arn: arn:aws:iam::518216637660:role/file-processor-es-sa
+#      eks.amazonaws.com/role-arn: arn:aws:iam::518216637660:role/file-processor-irsa
 
   secretStore:
     region: us-east-1
-    auth:
-      type: jwt
+#    auth:
+#      type: jwt
 
   ingress:
     enabled: true
