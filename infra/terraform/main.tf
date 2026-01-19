@@ -1,0 +1,199 @@
+provider "aws" {
+  region = var.region
+}
+
+data "aws_availability_zones" "available" {}
+
+# ===== VPC =====
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name                 = "file-processor-vpc"
+  cidr                 = "10.0.0.0/16"
+  azs                  = slice(data.aws_availability_zones.available.names, 0, 2)
+  private_subnets      = ["10.0.1.0/24", "10.0.2.0/24"]
+  public_subnets       = ["10.0.101.0/24", "10.0.102.0/24"]
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  tags = { "Name" = "file-processor-vpc" }
+}
+
+# ===== EKS Cluster =====
+module "eks" {
+  source          = "terraform-aws-modules/eks/aws"
+  version         = "~> 20.0"
+  cluster_name    = "file-processor-eks"
+  cluster_version = "1.30"
+
+  # rede
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  # habilita IRSA para External Secrets
+  enable_irsa = true
+
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_private_access = true
+
+  cluster_endpoint_public_access_cidrs = [
+    "0.0.0.0/0"
+  ]
+
+  access_entries = {
+    admin = {
+      principal_arn = "arn:aws:iam::518216637660:user/kaua-dev"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
+
+  # Node Groups gerenciados
+  eks_managed_node_groups = {
+    default = {
+      desired_capacity = 2
+      max_capacity     = 3
+      min_capacity     = 1
+      instance_type    = "t3.medium"
+    }
+  }
+
+  # Defaults para todos os node groups
+  eks_managed_node_group_defaults = {
+    ami_type        = "AL2_x86_64"
+    disk_size       = 20
+    force_update_version = true
+    labels = {
+      env = "prod"
+    }
+  }
+}
+
+# ===== IAM Role para External Secrets (IRSA) =====
+resource "aws_iam_role" "external_secrets_sa" {
+  name = "file-processor-external-secrets-sa"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "eks.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_policy" "external_secrets" {
+  name = "external-secrets-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:ListSecrets"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+module "external_secrets_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name = "external-secrets-irsa"
+
+  oidc_providers = {
+    eks = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "external-secrets:external-secrets"
+      ]
+    }
+  }
+
+  role_policy_arns = {
+    secretsmanager = aws_iam_policy.external_secrets.arn
+  }
+}
+
+# ===== Security Groups =====
+resource "aws_security_group" "eks" {
+  name        = "file-processor-eks-sg"
+  description = "SG for EKS cluster"
+  vpc_id      = module.vpc.vpc_id
+}
+
+resource "aws_security_group" "rds" {
+  name   = "file-processor-rds-sg"
+  vpc_id = module.vpc.vpc_id
+}
+
+resource "aws_security_group" "redis" {
+  name   = "file-processor-redis-sg"
+  vpc_id = module.vpc.vpc_id
+}
+
+# ===== IAM Role for External Secrets =====
+resource "aws_iam_role" "eks_external_secrets" {
+  name = "file-processor-es-sa"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = { Service = "eks.amazonaws.com" },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+# ===== Módulos =====
+module "rds" {
+  source     = "./modules/rds"
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+  sg_id      = aws_security_group.rds.id
+  db_name    = var.db_name
+  db_user    = var.db_user
+  db_password= var.db_password
+}
+
+module "redis" {
+  source     = "./modules/redis"
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+  sg_id      = aws_security_group.redis.id
+}
+
+module "msk" {
+  source     = "./modules/msk"
+  subnet_ids = module.vpc.private_subnets
+  sg_id      = aws_security_group.eks.id
+}
+
+module "secrets_manager" {
+  source        = "./modules/secrets-manager"
+  db_host       = module.rds.endpoint
+  db_port       = module.rds.port
+  db_name       = var.db_name
+  db_user       = var.db_user
+  db_password   = var.db_password
+  redis_host    = module.redis.endpoint
+  redis_port    = module.redis.port
+  kafka_brokers = split(",", module.msk.bootstrap_brokers)
+}
