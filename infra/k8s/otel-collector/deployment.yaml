@@ -29,10 +29,6 @@ spec:
               mountPath: /etc/otel
               readOnly: true
       volumes:
-        - name: config
+        - name: otel-collector-config
           configMap:
             name: otel-collector-config
-  volumes:
-    - name: otel-collector-config
-      configMap:
-        name: otel-collector-config
