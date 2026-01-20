@@ -149,6 +149,24 @@ resource "aws_security_group" "redis" {
   vpc_id = module.vpc.vpc_id
 }
 
+resource "aws_security_group_rule" "eks_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = aws_security_group.eks.id
+}
+
+resource "aws_security_group_rule" "eks_to_redis" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.redis.id
+  source_security_group_id = aws_security_group.eks.id
+}
+
 # ===== IAM Role for External Secrets =====
 resource "aws_iam_role" "eks_external_secrets" {
   name = "file-processor-es-sa"
