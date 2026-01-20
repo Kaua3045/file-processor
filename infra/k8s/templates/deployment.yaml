@@ -23,18 +23,39 @@ spec:
         seccompProfile:
           type: {{ .Values.app.securityContext.type }}
 
+      volumes:
+        - name: tmp-dir
+          emptyDir: {}
+
       containers:
         - name: {{ .Values.app.name }}
           image: {{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}
           imagePullPolicy: {{ .Values.app.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.app.ports.containerPort }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-dir
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.app.ports.containerPort }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.app.ports.containerPort }}
+            initialDelaySeconds: 60
+            periodSeconds: 10
 
           envFrom:
             - secretRef:
@@ -78,18 +99,15 @@ spec:
             # ===== KAFKA (MSK IAM) =====
             - name: KAFKA_SECURITY_PROTOCOL
               value: {{ .Values.app.kafka.securityProtocol | quote }}
-
             - name: KAFKA_SASL_MECHANISM
               value: {{ .Values.app.kafka.saslMechanism | quote }}
 
             # ===== DATABASE =====
             - name: DB_PORT
               value: {{ .Values.app.database.port | quote }}
-
             - name: DB_NAME
               value: {{ .Values.app.database.name | quote }}
-
-            # DB_PASSWORD get in Secret Manager
+            # DB_PASSWORD vindo do Secret Manager
 
             # ===== REDIS =====
             - name: REDIS_PORT
@@ -97,18 +115,3 @@ spec:
 
           resources:
   {{- toYaml .Values.app.resources | nindent 12 }}
-
-
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: {{ .Values.app.ports.containerPort }}
-            initialDelaySeconds: 30
-            periodSeconds: 15
-
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: {{ .Values.app.ports.containerPort }}
-            initialDelaySeconds: 15
-            periodSeconds: 10
