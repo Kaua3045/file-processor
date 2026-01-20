@@ -41,6 +41,33 @@ spec:
                 name: {{ .Values.app.externalSecret.secretName }}
 
           env:
+            # ===== OPENTELEMETRY =====
+            - name: OTEL_TRACES_EXPORTER
+              value: {{ .Values.app.env.OTEL_TRACES_EXPORTER | quote }}
+            - name: OTEL_METRICS_EXPORTER
+              value: {{ .Values.app.env.OTEL_METRICS_EXPORTER | quote }}
+            - name: OTEL_LOGS_EXPORTER
+              value: {{ .Values.app.env.OTEL_LOGS_EXPORTER | quote }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: {{ .Values.app.env.OTEL_EXPORTER_OTLP_PROTOCOL | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.app.env.OTEL_EXPORTER_OTLP_ENDPOINT | quote }}
+            - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+              value: {{ .Values.app.env.OTEL_EXPORTER_OTLP_METRICS_PROTOCOL | quote }}
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: {{ .Values.app.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT | quote }}
+            - name: OTEL_INSTRUMENTATION_SERVLET_EXCLUDE_PATTERN
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_SERVLET_EXCLUDE_PATTERN | quote }}
+            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES | quote }}
+            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_CODE_ATTRIBUTES
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_CODE_ATTRIBUTES | quote }}
+            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MARKER_ATTRIBUTE
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MARKER_ATTRIBUTE | quote }}
+            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_KEY_VALUE_PAIR_ATTRIBUTES
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_KEY_VALUE_PAIR_ATTRIBUTES | quote }}
+            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES
+              value: {{ .Values.app.env.OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES | quote }}
             - name: DEPLOYMENT_ENVIRONMENT_NAME
               value: {{ .Values.app.env.DEPLOYMENT_ENVIRONMENT_NAME | quote }}
 
