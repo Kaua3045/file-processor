@@ -37,7 +37,7 @@ app:
     secretStoreName: aws-secrets
     secretName: file-processor-secret
     refreshInterval: 1h
-    dataFromKey: file-processor
+    dataFromKey: test/file-processor
 
   secretStore:
     name: aws-secrets

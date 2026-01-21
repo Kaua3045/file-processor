@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "this" {
-  name = "dev/file-processor"
+  name = "test/file-processor"
 }
 
 resource "aws_secretsmanager_secret_version" "this" {
