@@ -58,6 +58,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-blackbird'
 
     implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'org.postgresql:postgresql'
 
     implementation 'org.owasp.encoder:encoder:1.2.3'
