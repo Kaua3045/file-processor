@@ -57,7 +57,7 @@ app:
 
   database:
     port: "5432"
-    name: "file-processor-database"
+    name: "file_processor"
 
   serviceAccount:
     create: true

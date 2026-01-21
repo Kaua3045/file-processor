@@ -155,13 +155,18 @@ resource "aws_security_group" "redis" {
   vpc_id = module.vpc.vpc_id
 }
 
+resource "aws_security_group" "msk" {
+  name   = "file-processor-msk-sg"
+  vpc_id = module.vpc.vpc_id
+}
+
 resource "aws_security_group_rule" "eks_to_rds" {
   type                     = "ingress"
   from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
   security_group_id        = aws_security_group.rds.id
-  source_security_group_id = aws_security_group.eks.id
+  source_security_group_id = module.eks.node_security_group_id
 }
 
 resource "aws_security_group_rule" "eks_to_redis" {
@@ -170,7 +175,16 @@ resource "aws_security_group_rule" "eks_to_redis" {
   to_port                  = 6379
   protocol                 = "tcp"
   security_group_id        = aws_security_group.redis.id
-  source_security_group_id = aws_security_group.eks.id
+  source_security_group_id = module.eks.node_security_group_id
+}
+
+resource "aws_security_group_rule" "eks_to_msk" {
+  type                     = "ingress"
+  from_port                = 9094
+  to_port                  = 9094
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.msk.id
+  source_security_group_id = module.eks.node_security_group_id
 }
 
 resource "aws_security_group_rule" "rds_egress" {
