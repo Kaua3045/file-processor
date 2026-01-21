@@ -13,6 +13,8 @@ spec:
       labels:
         app: {{ .Values.app.name }}
     spec:
+      nodeSelector:
+        role: app
       serviceAccountName: {{ .Values.app.serviceAccount.name }}
       terminationGracePeriodSeconds: 40
       securityContext:

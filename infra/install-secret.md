@@ -1,3 +1,5 @@
+# Unicas duas coisas que nao funcionou foi o alb e o msk se conectar no spring fica dando disconect
+
 # Instale o helm do external secret
 ```shell
 helm install external-secrets external-secrets/external-secrets \
@@ -26,8 +28,8 @@ kubectl patch deploy external-secrets \
 ```shell
 kubectl rollout restart deploy external-secrets -n external-secrets
 ```
-
 # Configure em values-prod e values o caminho correto da secret por exemplo test/file-processor
+
 # Configurar AWS Load Balancer Controller
 ## Pegamos o oidc
 ```shell
@@ -107,4 +109,27 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 # Se estiver tudo ok vai ficar ready 2/2
 ```shell
 kubectl get deployment -n kube-system aws-load-balancer-controller
+```
+
+# Outra forma de instalar o load balancer caso use o terraform pra criar o service account
+```shell
+kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=main"
+
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+
+helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=<EKS_CLUSTER_NAME> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region=<AWS_REGION> \
+  --set vpcId=<VPC_ID>
+```
+```shell
+kubectl edit deployment aws-load-balancer-controller -n kube-system
+
+spec:
+  nodeSelector:
+    role: alb-controller
 ```

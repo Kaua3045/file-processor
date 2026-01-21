@@ -2,6 +2,21 @@ provider "aws" {
   region = var.region
 }
 
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = [
+      "eks", "get-token",
+      "--cluster-name", module.eks.cluster_name,
+      "--region", var.region
+    ]
+  }
+}
+
 data "aws_availability_zones" "available" {}
 
 # ===== VPC =====
@@ -17,6 +32,18 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = true
   tags = { "Name" = "file-processor-vpc" }
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = "1"            # ALB público
+    "kubernetes.io/cluster/file-processor-eks" = "shared"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = "1"   # ALB interno
+    "kubernetes.io/cluster/file-processor-eks" = "shared"
+  }
+
+  map_public_ip_on_launch = true
 }
 
 # ===== EKS Cluster =====
@@ -54,16 +81,25 @@ module "eks" {
     }
   }
 
-  # Node Groups gerenciados
+  # Alb nodes public
   eks_managed_node_groups = {
-    default = {
-      desired_capacity = 2
-      max_capacity     = 3
+    alb_nodes = {
+      desired_capacity = 1
+      max_capacity     = 1
       min_capacity     = 1
       instance_type    = "t3.medium"
-      additional_security_group_ids = [
-        aws_security_group.eks.id
-      ]
+      subnet_ids       = module.vpc.public_subnets
+      labels = { "role" = "alb-controller" }
+    }
+    app_nodes = {
+      desired_capacity = 2
+      max_capacity     = 4
+      min_capacity     = 2
+      instance_type    = "t3.medium"
+      subnet_ids       = module.vpc.private_subnets
+      labels = {
+        role = "app"
+      }
     }
   }
 
