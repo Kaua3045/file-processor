@@ -8,6 +8,13 @@ resource "aws_msk_cluster" "this" {
     client_subnets = var.subnet_ids
     security_groups = [var.sg_id]
   }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS"
+      in_cluster    = true
+    }
+  }
 }
 
 resource "aws_msk_configuration" "this" {

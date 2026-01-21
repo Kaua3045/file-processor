@@ -12,7 +12,7 @@ resource "aws_secretsmanager_secret_version" "this" {
     DB_PASSWORD   = var.db_password
     REDIS_HOST    = var.redis_host
     REDIS_PORT    = var.redis_port
-    # KAFKA_BROKERS = join(",", var.kafka_brokers)
-    KAFKA_BROKERS = length(var.kafka_brokers) > 0 ? var.kafka_brokers[0] : ""
+    KAFKA_BROKERS = join(",", var.kafka_brokers)
+    # KAFKA_BROKERS = length(var.kafka_brokers) > 0 ? var.kafka_brokers[0] : ""
   })
 }
