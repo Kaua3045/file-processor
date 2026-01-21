@@ -61,6 +61,9 @@ module "eks" {
       max_capacity     = 3
       min_capacity     = 1
       instance_type    = "t3.medium"
+      additional_security_group_ids = [
+        aws_security_group.eks.id
+      ]
     }
   }
 
@@ -72,6 +75,9 @@ module "eks" {
     labels = {
       env = "prod"
     }
+    additional_security_group_ids = [
+      aws_security_group.eks.id
+    ]
   }
 }
 
@@ -165,6 +171,15 @@ resource "aws_security_group_rule" "eks_to_redis" {
   protocol                 = "tcp"
   security_group_id        = aws_security_group.redis.id
   source_security_group_id = aws_security_group.eks.id
+}
+
+resource "aws_security_group_rule" "rds_egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  security_group_id = aws_security_group.rds.id
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 # ===== IAM Role for External Secrets =====
