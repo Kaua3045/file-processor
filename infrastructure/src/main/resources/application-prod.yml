@@ -22,8 +22,10 @@ server:
 spring:
   kafka:
     properties:
-      security.protocol: SSL
-      ssl.endpoint.identification.algorithm: https
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
   datasource: # change this configurations to your database
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
     username: ${DB_USER}

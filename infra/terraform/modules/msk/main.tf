@@ -9,11 +9,22 @@ resource "aws_msk_cluster" "this" {
     security_groups = [var.sg_id]
   }
 
+  client_authentication {
+    sasl {
+      iam = true
+    }
+  }
+
   encryption_info {
     encryption_in_transit {
       client_broker = "TLS"
       in_cluster    = true
     }
+  }
+
+  configuration_info {
+    arn      = aws_msk_configuration.this.arn
+    revision = aws_msk_configuration.this.latest_revision
   }
 }
 

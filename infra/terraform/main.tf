@@ -223,6 +223,15 @@ resource "aws_security_group_rule" "eks_to_msk" {
   source_security_group_id = module.eks.node_security_group_id
 }
 
+resource "aws_security_group_rule" "eks_egress_all" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  security_group_id = module.eks.node_security_group_id
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
 resource "aws_security_group_rule" "rds_egress" {
   type              = "egress"
   from_port         = 0
@@ -266,7 +275,7 @@ module "redis" {
 module "msk" {
   source     = "./modules/msk"
   subnet_ids = module.vpc.private_subnets
-  sg_id      = aws_security_group.eks.id
+  sg_id      = aws_security_group.msk.id
 }
 
 module "secrets_manager" {
